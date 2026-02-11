@@ -65,7 +65,6 @@ abstract class BaseNotifier extends ChangeNotifier with WidgetsBindingObserver {
 
   void foreground();
 
-  @protected
   void notify() => notifyListeners();
 
   @protected

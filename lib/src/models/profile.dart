@@ -70,13 +70,13 @@ class Profile extends Equatable {
 
   Map<String, dynamic> get source {
     return {
-      ProfileKeys.id: id,
-      ProfileKeys.name: name,
-      ProfileKeys.photo: photo,
-      ProfileKeys.platform: platform,
-      ProfileKeys.room: room,
-      ProfileKeys.token: token,
-      ProfileKeys.extra: extra,
+      if (id.isNotEmpty) ProfileKeys.id: id,
+      if (name.isNotEmpty) ProfileKeys.name: name,
+      if ((photo ?? '').isNotEmpty) ProfileKeys.photo: photo,
+      if (platform.isNotEmpty) ProfileKeys.platform: platform,
+      if ((room ?? '').isNotEmpty) ProfileKeys.room: room,
+      if (token.isNotEmpty) ProfileKeys.token: token,
+      if (extra.isNotEmpty) ProfileKeys.extra: extra,
     };
   }
 

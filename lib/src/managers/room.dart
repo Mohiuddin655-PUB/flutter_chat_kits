@@ -411,18 +411,19 @@ class RoomManager extends BaseNotifier {
   }
 
   Future<Room> createRoom(Room room) async {
-    if (room is DirectRoom) {
-      return createOrGetThread(room.participants.toList(), extra: room.extra);
-    }
-    if (room is GroupRoom) {
-      return createOrGetGroup(
-        room.name ?? 'Group',
-        id: room.id,
-        participants: room.participants.toList(),
-        extra: room.extra,
-      );
-    }
-    return Room.empty();
+    try {
+      final creates = _n.normalize(room.source, _n.room);
+      await _room.create(room.id, creates);
+      for (final i in room.participants) {
+        final profile = mappedProfiles[i];
+        if (profile != null) {
+          final updates = _n.normalize(profile.source, _n.profile);
+          _profile.update(i, updates);
+        }
+      }
+      notify();
+    } catch (_) {}
+    return room;
   }
 
   Future<Room> createOrGetThread(

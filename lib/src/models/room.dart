@@ -206,6 +206,32 @@ class Room extends Equatable {
     return DirectRoom.from(room);
   }
 
+  Map<String, dynamic> get source {
+    return {
+      if (id.isNotEmpty) RoomKeys.id: id,
+      if (isDeleted) RoomKeys.isDeleted: isDeleted,
+      if (isGroup) RoomKeys.isGroup: isGroup,
+      if (!createdAt.isEmpty) RoomKeys.createdAt: createdAt,
+      if (createdBy.isNotEmpty) RoomKeys.createdBy: createdBy,
+      if (participants.isNotEmpty) RoomKeys.participants: participants.toList(),
+      if (leaves.isNotEmpty) RoomKeys.leaves: leaves.toList(),
+      if (blocks.isNotEmpty) RoomKeys.blocks: blocks.toList(),
+      if (mutes.isNotEmpty) RoomKeys.mutes: mutes,
+      if ((lastMessage ?? '').isNotEmpty) RoomKeys.lastMessage: lastMessage,
+      if (lastMessageId.isNotEmpty) RoomKeys.lastMessageId: lastMessageId,
+      if (lastMessageSenderId.isNotEmpty)
+        RoomKeys.lastMessageSenderId: lastMessageSenderId,
+      if (lastMessageStatuses.isNotEmpty)
+        RoomKeys.lastMessageStatuses: lastMessageStatuses.map((k, v) {
+          return MapEntry(k, v.name);
+        }),
+      if (lastMessageDeleted) RoomKeys.lastMessageDeleted: lastMessageDeleted,
+      if (_unseenCount.isNotEmpty) RoomKeys.unseenCount: _unseenCount,
+      if (!updatedAt.isEmpty) RoomKeys.updatedAt: updatedAt,
+      if (extra.isNotEmpty) RoomKeys.extra: extra,
+    };
+  }
+
   @override
   List<Object?> get props {
     return [
@@ -239,9 +265,9 @@ class DirectRoom extends Room {
     return isMuted(id);
   }
 
-  const DirectRoom.empty() : this._();
+  const DirectRoom.empty() : this();
 
-  const DirectRoom._({
+  const DirectRoom({
     super.id = '',
     super.createdAt,
     super.createdBy = '',
@@ -261,7 +287,7 @@ class DirectRoom extends Room {
   }) : super(isGroup: false);
 
   factory DirectRoom.from(Room room) {
-    return DirectRoom._(
+    return DirectRoom(
       id: room.id,
       createdBy: room.createdBy,
       createdAt: room.createdAt,
@@ -286,9 +312,9 @@ class GroupRoom extends Room {
   final String? name;
   final String? photo;
 
-  const GroupRoom.empty() : this._();
+  const GroupRoom.empty() : this();
 
-  const GroupRoom._({
+  const GroupRoom({
     super.createdAt,
     super.updatedAt,
     super.id = '',
@@ -310,7 +336,7 @@ class GroupRoom extends Room {
   }) : super(isGroup: true);
 
   factory GroupRoom.from(Room room, String? name, String? photo) {
-    return GroupRoom._(
+    return GroupRoom(
       id: room.id,
       createdBy: room.createdBy,
       createdAt: room.createdAt,
@@ -330,6 +356,15 @@ class GroupRoom extends Room {
       name: name,
       photo: photo,
     );
+  }
+
+  @override
+  Map<String, dynamic> get source {
+    return {
+      ...super.source,
+      if ((name ?? '').isNotEmpty) RoomKeys.name: name,
+      if ((photo ?? '').isNotEmpty) RoomKeys.photo: photo,
+    };
   }
 
   @override
