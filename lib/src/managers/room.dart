@@ -374,8 +374,9 @@ class RoomManager extends BaseNotifier {
 
   Future<Room> generateOrGetThread(
     Profile profile,
-    List<String> participants,
-  ) async {
+    List<String> participants, {
+    RoomExtra? extra,
+  }) async {
     try {
       if (!isConnected || !isActive || isPaused) return Room.empty();
       if (me.isEmpty) return Room.empty();
@@ -401,6 +402,7 @@ class RoomManager extends BaseNotifier {
         RoomKeys.updatedAt: ChatValueTimestamp(),
         RoomKeys.createdBy: me,
         RoomKeys.participants: participants,
+        RoomKeys.extra: extra,
       }, _n.room);
       return Room.parse(creates);
     } catch (_) {
@@ -410,19 +412,23 @@ class RoomManager extends BaseNotifier {
 
   Future<Room> createRoom(Room room) async {
     if (room is DirectRoom) {
-      return createOrGetThread(room.participants.toList());
+      return createOrGetThread(room.participants.toList(), extra: room.extra);
     }
     if (room is GroupRoom) {
       return createOrGetGroup(
         room.name ?? 'Group',
         id: room.id,
         participants: room.participants.toList(),
+        extra: room.extra,
       );
     }
     return Room.empty();
   }
 
-  Future<Room> createOrGetThread(List<String> participants) async {
+  Future<Room> createOrGetThread(
+    List<String> participants, {
+    RoomExtra? extra,
+  }) async {
     try {
       if (!isConnected || !isActive || isPaused) return Room.empty();
       if (me.isEmpty) return Room.empty();
@@ -445,6 +451,7 @@ class RoomManager extends BaseNotifier {
         RoomKeys.updatedAt: ChatValueTimestamp(),
         RoomKeys.createdBy: me,
         RoomKeys.participants: participants,
+        if (extra != null && extra.isNotEmpty) RoomKeys.extra: extra,
       }, _n.room);
       await _room.create(id, creates);
       resetToken();
@@ -458,6 +465,7 @@ class RoomManager extends BaseNotifier {
     String name, {
     String? id,
     List<String>? participants,
+    RoomExtra? extra,
   }) async {
     try {
       if (!isConnected || !isActive || !isPaused) return Room.empty();
@@ -479,6 +487,7 @@ class RoomManager extends BaseNotifier {
         RoomKeys.updatedAt: ChatValueTimestamp(),
         RoomKeys.createdBy: me,
         RoomKeys.participants: participants.toSet().toList(),
+        if (extra != null && extra.isNotEmpty) RoomKeys.extra: extra,
       }, _n.room);
       await _room.create(id, creates);
       resetToken();
@@ -492,6 +501,32 @@ class RoomManager extends BaseNotifier {
     if (me.isEmpty) return;
     try {
       await _room.update(roomId, _n.normalize(value, _n.room));
+    } catch (_) {}
+  }
+
+  Future<void> updateExtra(String roomId, Map<String, dynamic> extra) async {
+    if (me.isEmpty) return;
+    try {
+      await _room.update(roomId, {
+        RoomKeys.extra: _n.normalize(extra, _n.room),
+      });
+    } catch (_) {}
+  }
+
+  Future<void> updateProfile(String uid, Map<String, dynamic> value) async {
+    if (me.isEmpty) return;
+    try {
+      await _profile.update(uid, _n.normalize(value, _n.profile));
+    } catch (_) {}
+  }
+
+  Future<void> updateProfileExtra(
+      String uid, Map<String, dynamic> extra) async {
+    if (me.isEmpty) return;
+    try {
+      await _profile.update(uid, {
+        RoomKeys.extra: _n.normalize(extra, _n.profile),
+      });
     } catch (_) {}
   }
 
@@ -946,6 +981,19 @@ class RoomManager extends BaseNotifier {
     } catch (_) {
       return false;
     }
+  }
+
+  Future<void> updateMessageExtra(
+    String roomId,
+    String msgId,
+    Map<String, dynamic> extra,
+  ) async {
+    if (me.isEmpty) return;
+    try {
+      await _message.update(roomId, msgId, {
+        RoomKeys.extra: _n.normalize(extra, _n.message),
+      });
+    } catch (_) {}
   }
 
   Future<bool> updateMessages(

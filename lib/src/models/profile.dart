@@ -1,5 +1,9 @@
 import 'package:equatable/equatable.dart';
 
+import '../utils/parser.dart';
+
+typedef ProfileExtra = Map<String, dynamic>;
+
 final class ProfileKeys {
   const ProfileKeys._();
 
@@ -9,6 +13,7 @@ final class ProfileKeys {
   static const platform = 'platform';
   static const token = 'token';
   static const room = 'room';
+  static const extra = 'extra';
 }
 
 class Profile extends Equatable {
@@ -18,6 +23,7 @@ class Profile extends Equatable {
   final String platform;
   final String token;
   final String? room;
+  final ProfileExtra extra;
 
   bool get isEmpty {
     return id.isEmpty || name.isEmpty || platform.isEmpty || token.isEmpty;
@@ -38,11 +44,13 @@ class Profile extends Equatable {
     required this.platform,
     this.room,
     required this.token,
+    this.extra = const {},
   });
 
-  factory Profile.parse(Object? source) {
+  factory Profile.parse(Object? source, {ProfileExtra? extra}) {
     if (source is Profile) return source;
     if (source is! Map) return Profile.empty();
+    final ex = source[ProfileKeys.extra];
     final id = source[ProfileKeys.id];
     final name = source[ProfileKeys.name];
     final photo = source[ProfileKeys.photo];
@@ -50,6 +58,7 @@ class Profile extends Equatable {
     final room = source[ProfileKeys.room];
     final token = source[ProfileKeys.token];
     return Profile(
+      extra: extra ?? (ex is Map ? ex.parse() : {}),
       id: id is String && id.isNotEmpty ? id : '',
       name: name is String && name.isNotEmpty ? name : '?',
       photo: photo is String && photo.isNotEmpty ? photo : null,
@@ -67,11 +76,12 @@ class Profile extends Equatable {
       ProfileKeys.platform: platform,
       ProfileKeys.room: room,
       ProfileKeys.token: token,
+      ProfileKeys.extra: extra,
     };
   }
 
   @override
   List<Object?> get props {
-    return [id, name, photo, platform, room, token];
+    return [id, name, photo, platform, room, token, extra];
   }
 }

@@ -7,6 +7,8 @@ import '../utils/enum_parser.dart';
 import '../utils/field_value.dart';
 import '../utils/parser.dart';
 
+typedef MessageExtra = Map<String, dynamic>;
+
 final class MessageKeys {
   const MessageKeys._();
 
@@ -31,6 +33,7 @@ final class MessageKeys {
   static const isEdited = 'isEdited';
   static const editedAt = 'editedAt';
   static const isForwarded = 'isForwarded';
+  static const extra = 'extra';
 }
 
 enum MessageType { none, audio, image, link, text, video }
@@ -54,6 +57,7 @@ class Message extends Equatable {
   final ChatValueTimestamp editedAt;
   final Map<String, String> reactions;
   final String replyId;
+  final MessageExtra extra;
 
   final bool isDeleted;
   final bool isEdited;
@@ -225,6 +229,7 @@ class Message extends Equatable {
     required this.isDeleted,
     required this.isEdited,
     required this.isForwarded,
+    required this.extra,
   })  : editedAt = editedAt ?? const ChatValueTimestamp(),
         replyId = replyId ?? '';
 
@@ -246,12 +251,14 @@ class Message extends Equatable {
       isDeleted: false,
       isEdited: false,
       isForwarded: false,
+      extra: {},
     );
   }
 
-  factory Message.parse(Object? source) {
+  factory Message.parse(Object? source, {MessageExtra? extra}) {
     if (source is Message) return source;
     if (source is! Map) return Message.empty();
+    final ex = source[MessageKeys.extra];
     final id = source[MessageKeys.id];
     final roomId = source[MessageKeys.roomId];
     final senderId = source[MessageKeys.senderId];
@@ -290,6 +297,7 @@ class Message extends Equatable {
       isEdited: isEdited is bool ? isEdited : false,
       isForwarded: isForwarded is bool ? isForwarded : false,
       isDeleted: isDeleted is bool ? isDeleted : false,
+      extra: extra ?? (ex is Map ? ex.parse() : {}),
     );
 
     final mContent = content is String && content.isNotEmpty ? content : null;
@@ -340,6 +348,7 @@ class Message extends Equatable {
     ChatValueTimestamp? editedAt,
     ChatValueTimestamp? updatedAt,
     MessageStatus? status,
+    MessageExtra? extra,
   }) {
     final deletes = this.deletes;
     if (isDeletedForMe == true) deletes[me] = true;
@@ -383,6 +392,7 @@ class Message extends Equatable {
       pins: pins,
       removes: removes,
       type: type,
+      extra: extra ?? this.extra,
     );
   }
 
@@ -405,6 +415,7 @@ class Message extends Equatable {
       if (isEdited) MessageKeys.isEdited: isEdited,
       if (isForwarded) MessageKeys.isForwarded: isForwarded,
       if (pins.isNotEmpty) MessageKeys.pins: pins,
+      if (extra.isNotEmpty) MessageKeys.extra: extra,
     };
   }
 
@@ -427,6 +438,7 @@ class Message extends Equatable {
       isEdited,
       editedAt,
       isForwarded,
+      extra,
     ];
   }
 }
@@ -453,6 +465,7 @@ class AudioMessage extends Message {
     super.isDeleted = false,
     super.isEdited = false,
     super.isForwarded = false,
+    super.extra = const {},
     this.durationInSec = 0,
     this.url = '',
   }) : super(type: MessageType.audio);
@@ -462,6 +475,7 @@ class AudioMessage extends Message {
   factory AudioMessage.create(
     String path,
     int durationInSec, {
+    MessageExtra? extra,
     String? id,
     String? roomId,
     String? senderId,
@@ -481,6 +495,7 @@ class AudioMessage extends Message {
       replyId: replyId,
       createdAt: createdAt,
       updatedAt: createdAt,
+      extra: extra ?? {},
       durationInSec: durationInSec,
       url: path,
       statuses: {senderId: MessageStatus.sending},
@@ -504,6 +519,7 @@ class AudioMessage extends Message {
       isDeleted: msg.isDeleted,
       isEdited: msg.isEdited,
       isForwarded: msg.isForwarded,
+      extra: msg.extra,
       durationInSec: durationInSec,
       url: url,
     );
@@ -525,6 +541,7 @@ class AudioMessage extends Message {
     ChatValueTimestamp? editedAt,
     ChatValueTimestamp? updatedAt,
     MessageStatus? status,
+    MessageExtra? extra,
     int? durationInSec,
     String? url,
   }) {
@@ -543,6 +560,7 @@ class AudioMessage extends Message {
       editedAt: editedAt,
       updatedAt: updatedAt,
       status: status,
+      extra: extra,
     );
     return AudioMessage._(
       id: msg.id,
@@ -560,6 +578,7 @@ class AudioMessage extends Message {
       isDeleted: msg.isDeleted,
       isEdited: msg.isEdited,
       isForwarded: msg.isForwarded,
+      extra: msg.extra,
       durationInSec: durationInSec ?? this.durationInSec,
       url: url ?? this.url,
     );
@@ -601,6 +620,7 @@ class ImageMessage extends Message {
     super.isDeleted = false,
     super.isEdited = false,
     super.isForwarded = false,
+    super.extra = const {},
     this.caption,
     this.urls = const [],
   }) : super(type: MessageType.image);
@@ -610,6 +630,7 @@ class ImageMessage extends Message {
   factory ImageMessage.create(
     List<String> paths,
     String? caption, {
+    MessageExtra? extra,
     String? id,
     String? roomId,
     String? senderId,
@@ -629,6 +650,7 @@ class ImageMessage extends Message {
       createdAt: createdAt,
       updatedAt: createdAt,
       statuses: {senderId: MessageStatus.sending},
+      extra: extra ?? {},
       replyId: replyId,
       caption: caption,
       urls: paths,
@@ -652,6 +674,7 @@ class ImageMessage extends Message {
       isDeleted: msg.isDeleted,
       isEdited: msg.isEdited,
       isForwarded: msg.isForwarded,
+      extra: msg.extra,
       caption: caption,
       urls: urls,
     );
@@ -673,6 +696,7 @@ class ImageMessage extends Message {
     ChatValueTimestamp? editedAt,
     ChatValueTimestamp? updatedAt,
     MessageStatus? status,
+    MessageExtra? extra,
     String? caption,
     List<String>? urls,
   }) {
@@ -691,6 +715,7 @@ class ImageMessage extends Message {
       editedAt: editedAt,
       updatedAt: updatedAt,
       status: status,
+      extra: extra,
     );
     return ImageMessage._(
       id: msg.id,
@@ -708,6 +733,7 @@ class ImageMessage extends Message {
       isDeleted: msg.isDeleted,
       isEdited: msg.isEdited,
       isForwarded: msg.isForwarded,
+      extra: msg.extra,
       caption: caption ?? this.caption,
       urls: urls ?? this.urls,
     );
@@ -748,6 +774,7 @@ class LinkMessage extends Message {
     super.isDeleted = false,
     super.isEdited = false,
     super.isForwarded = false,
+    super.extra = const {},
     this.link = '',
   }) : super(type: MessageType.link);
 
@@ -755,6 +782,7 @@ class LinkMessage extends Message {
 
   factory LinkMessage.create(
     String link, {
+    MessageExtra? extra,
     String? roomId,
     String? id,
     String? senderId,
@@ -775,6 +803,7 @@ class LinkMessage extends Message {
       updatedAt: createdAt,
       statuses: {senderId: MessageStatus.sending},
       replyId: replyId,
+      extra: extra ?? {},
       link: link,
     );
   }
@@ -796,6 +825,7 @@ class LinkMessage extends Message {
       isDeleted: msg.isDeleted,
       isEdited: msg.isEdited,
       isForwarded: msg.isForwarded,
+      extra: msg.extra,
       link: link,
     );
   }
@@ -816,6 +846,7 @@ class LinkMessage extends Message {
     ChatValueTimestamp? editedAt,
     ChatValueTimestamp? updatedAt,
     MessageStatus? status,
+    MessageExtra? extra,
     String? link,
   }) {
     final msg = super.copyWith(
@@ -833,6 +864,7 @@ class LinkMessage extends Message {
       editedAt: editedAt,
       updatedAt: updatedAt,
       status: status,
+      extra: extra,
     );
     return LinkMessage._(
       id: msg.id,
@@ -850,6 +882,7 @@ class LinkMessage extends Message {
       isDeleted: msg.isDeleted,
       isEdited: msg.isEdited,
       isForwarded: msg.isForwarded,
+      extra: msg.extra,
       link: link ?? this.link,
     );
   }
@@ -885,6 +918,7 @@ class TextMessage extends Message {
     super.isDeleted = false,
     super.isEdited = false,
     super.isForwarded = false,
+    super.extra = const {},
     this.text = '',
   }) : super(type: MessageType.text);
 
@@ -892,6 +926,7 @@ class TextMessage extends Message {
 
   factory TextMessage.create(
     String text, {
+    MessageExtra? extra,
     String? roomId,
     String? id,
     String? senderId,
@@ -912,6 +947,7 @@ class TextMessage extends Message {
       updatedAt: createdAt,
       statuses: {senderId: MessageStatus.sending},
       replyId: replyId,
+      extra: extra ?? {},
       text: text,
     );
   }
@@ -933,6 +969,7 @@ class TextMessage extends Message {
       isDeleted: msg.isDeleted,
       isEdited: msg.isEdited,
       isForwarded: msg.isForwarded,
+      extra: msg.extra,
       text: text,
     );
   }
@@ -953,6 +990,7 @@ class TextMessage extends Message {
     ChatValueTimestamp? editedAt,
     ChatValueTimestamp? updatedAt,
     MessageStatus? status,
+    MessageExtra? extra,
     String? text,
   }) {
     final msg = super.copyWith(
@@ -970,6 +1008,7 @@ class TextMessage extends Message {
       editedAt: editedAt,
       updatedAt: updatedAt,
       status: status,
+      extra: extra,
     );
     return TextMessage._(
       id: msg.id,
@@ -987,6 +1026,7 @@ class TextMessage extends Message {
       isDeleted: msg.isDeleted,
       isEdited: msg.isEdited,
       isForwarded: msg.isForwarded,
+      extra: msg.extra,
       text: text ?? this.text,
     );
   }
@@ -1027,6 +1067,7 @@ class VideoMessage extends Message {
     super.isDeleted = false,
     super.isEdited = false,
     super.isForwarded = false,
+    super.extra = const {},
     this.caption,
     this.durationInSec = 0,
     this.thumbnail = '',
@@ -1040,6 +1081,7 @@ class VideoMessage extends Message {
     String thumbnail,
     int durationInSec,
     String? caption, {
+    MessageExtra? extra,
     String? roomId,
     String? id,
     String? senderId,
@@ -1060,6 +1102,7 @@ class VideoMessage extends Message {
       updatedAt: createdAt,
       statuses: {senderId: MessageStatus.sending},
       replyId: replyId,
+      extra: extra ?? {},
       caption: caption,
       durationInSec: durationInSec,
       thumbnail: thumbnail,
@@ -1090,6 +1133,7 @@ class VideoMessage extends Message {
       isDeleted: msg.isDeleted,
       isEdited: msg.isEdited,
       isForwarded: msg.isForwarded,
+      extra: msg.extra,
       caption: caption,
       durationInSec: durationInSec,
       thumbnail: thumbnail,
@@ -1113,6 +1157,7 @@ class VideoMessage extends Message {
     ChatValueTimestamp? editedAt,
     ChatValueTimestamp? updatedAt,
     MessageStatus? status,
+    MessageExtra? extra,
     int? durationInSec,
     String? caption,
     String? thumbnail,
@@ -1133,6 +1178,7 @@ class VideoMessage extends Message {
       editedAt: editedAt,
       updatedAt: updatedAt,
       status: status,
+      extra: extra,
     );
     return VideoMessage._(
       id: msg.id,
@@ -1150,6 +1196,7 @@ class VideoMessage extends Message {
       isDeleted: msg.isDeleted,
       isEdited: msg.isEdited,
       isForwarded: msg.isForwarded,
+      extra: msg.extra,
       caption: caption ?? this.caption,
       thumbnail: thumbnail ?? this.thumbnail,
       durationInSec: durationInSec ?? this.durationInSec,

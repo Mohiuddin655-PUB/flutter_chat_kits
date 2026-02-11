@@ -5,6 +5,8 @@ import '../utils/field_value.dart';
 import '../utils/parser.dart';
 import 'message.dart';
 
+typedef RoomExtra = Map<String, dynamic>;
+
 final class RoomKeys {
   const RoomKeys._();
 
@@ -27,6 +29,7 @@ final class RoomKeys {
   static const updatedAt = 'updatedAt';
   static const mutes = 'mutes';
   static const blocks = 'blocks';
+  static const extra = 'extra';
 }
 
 class Room extends Equatable {
@@ -39,6 +42,7 @@ class Room extends Equatable {
   final Set<String> leaves;
   final Set<String> blocks;
   final Map<String, bool> mutes;
+  final RoomExtra extra;
 
   final String? lastMessage;
   final String lastMessageId;
@@ -108,6 +112,7 @@ class Room extends Equatable {
     this.leaves = const {},
     this.blocks = const {},
     this.mutes = const {},
+    this.extra = const {},
     this.lastMessage,
     this.lastMessageId = '',
     this.lastMessageSenderId = '',
@@ -117,11 +122,13 @@ class Room extends Equatable {
     this.updatedAt = const ChatValueTimestamp(),
   }) : _unseenCount = unseenCount;
 
-  factory Room.parse(Object? source) {
+  factory Room.parse(Object? source, {RoomExtra? extra}) {
     if (source is Room) return source;
     if (source is! Map) return Room.empty();
     final isGroup = source[RoomKeys.isGroup];
     if (isGroup is! bool) return Room.empty();
+
+    final ex = source[RoomKeys.extra];
 
     final isDeleted = source[RoomKeys.isDeleted];
     final createdAt = source[RoomKeys.createdAt];
@@ -183,6 +190,7 @@ class Room extends Equatable {
       unseenCount: unseenCount is Map && unseenCount.isNotEmpty
           ? unseenCount.parse()
           : {},
+      extra: extra ?? (ex is Map ? ex.parse() : {}),
       updatedAt: ChatValueTimestamp.parse(updatedAt),
     );
 
@@ -217,6 +225,7 @@ class Room extends Equatable {
       lastMessageDeleted,
       _unseenCount,
       updatedAt,
+      extra,
     ];
   }
 }
@@ -248,6 +257,7 @@ class DirectRoom extends Room {
     super.unseenCount = const {},
     super.updatedAt,
     super.isDeleted = false,
+    super.extra,
   }) : super(isGroup: false);
 
   factory DirectRoom.from(Room room) {
@@ -259,6 +269,7 @@ class DirectRoom extends Room {
       leaves: room.leaves,
       blocks: room.blocks,
       mutes: room.mutes,
+      extra: room.extra,
       lastMessage: room.lastMessage,
       lastMessageId: room.lastMessageId,
       lastMessageSenderId: room.lastMessageSenderId,
@@ -286,6 +297,7 @@ class GroupRoom extends Room {
     super.leaves = const {},
     super.blocks = const {},
     super.mutes = const {},
+    super.extra,
     super.lastMessage,
     super.lastMessageId,
     super.lastMessageSenderId = '',
@@ -306,6 +318,7 @@ class GroupRoom extends Room {
       leaves: room.leaves,
       blocks: room.blocks,
       mutes: room.mutes,
+      extra: room.extra,
       lastMessage: room.lastMessage,
       lastMessageId: room.lastMessageId,
       lastMessageSenderId: room.lastMessageSenderId,
