@@ -1,0 +1,21 @@
+name: flutter_chat_kits
+description: "A comprehensive, production-ready Flutter package for building real-time chat applications with support for direct messaging and group chats."
+version: 1.0.0
+homepage:
+
+environment:
+  sdk: ^3.0.0
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  equatable: ^2.0.8
+  crypto: ^3.0.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
