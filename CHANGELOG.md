@@ -2,15 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.1] - 2026-02-11
+
+- Control profile, room and messages with extra
+
 ## [1.0.0] - 2026-02-11
 
 ### 🎉 Initial Release
 
-This is the first public release of Flutter Chat Kits - a comprehensive, production-ready Flutter package for building real-time chat applications.
+This is the first public release of Flutter Chat Kits - a comprehensive, production-ready Flutter
+package for building real-time chat applications.
 
 ### ✨ Features
 
 #### Core Functionality
+
 - **Real-time Messaging** - Send and receive messages instantly with stream-based architecture
 - **Direct & Group Chats** - Support for both one-on-one and group conversations
 - **Multiple Message Types**:
@@ -21,6 +27,7 @@ This is the first public release of Flutter Chat Kits - a comprehensive, product
     - Link messages with preview support
 
 #### Message Actions
+
 - Edit messages with edit history
 - Delete messages (for everyone or just for you)
 - Reply to messages with context
@@ -30,6 +37,7 @@ This is the first public release of Flutter Chat Kits - a comprehensive, product
 - Remove messages from view
 
 #### Status & Indicators
+
 - Real-time message status tracking (sending, sent, delivered, seen)
 - Typing indicators with multi-user support
 - Online/offline status tracking
@@ -37,6 +45,7 @@ This is the first public release of Flutter Chat Kits - a comprehensive, product
 - Unseen message count per conversation
 
 #### Room Management
+
 - Create and delete rooms
 - Mute/unmute conversations
 - Block/unblock users
@@ -45,7 +54,9 @@ This is the first public release of Flutter Chat Kits - a comprehensive, product
 - Custom room metadata support
 
 #### UI Components
+
 Pre-built, customizable widgets:
+
 - `ChatBoard` - Main message display with auto-scroll
 - `ChatInbox` - Conversation list item with preview
 - `ChatBody` - Complete chat screen layout
@@ -56,6 +67,7 @@ Pre-built, customizable widgets:
 - Visibility detection for auto-seen marking
 
 #### Architecture & Patterns
+
 - **Delegate Pattern** - Implement your own backend (Firebase, REST API, WebSocket, etc.)
 - **State Management** - Built-in managers using `ValueNotifier` and `ChangeNotifier`
 - **Type-Safe Models** - Strongly typed message and room models with Equatable support
@@ -65,6 +77,7 @@ Pre-built, customizable widgets:
 - **Background/Foreground** - Smart state handling for app lifecycle
 
 #### Delegates
+
 - `ChatMessageDelegate` - Message CRUD and streaming
 - `ChatRoomDelegate` - Room CRUD and streaming
 - `ChatProfileDelegate` - User profile management
@@ -74,6 +87,7 @@ Pre-built, customizable widgets:
 - `ChatNormalizer` - Data normalization and formatting
 
 #### Developer Experience
+
 - Comprehensive documentation and examples
 - Type-safe APIs throughout
 - Clear error handling patterns
@@ -83,6 +97,7 @@ Pre-built, customizable widgets:
 - Reactive programming model
 
 ### 🎯 Key Highlights
+
 - ✅ **Backend Agnostic** - Works with any backend (Firebase, REST, WebSocket, custom)
 - ✅ **Production Ready** - Battle-tested patterns and comprehensive error handling
 - ✅ **Fully Customizable** - Override any UI component to match your design system
@@ -93,6 +108,7 @@ Pre-built, customizable widgets:
 - ✅ **Offline Ready** - Designed for offline-first architectures
 
 ### 📦 Package Structure
+
 ```
 lib/
 ├── src/
@@ -105,6 +121,7 @@ lib/
 ```
 
 ### 🚀 Getting Started
+
 See the [README.md](README.md) for installation instructions and quick start guide
 
 ---
@@ -114,6 +131,7 @@ See the [README.md](README.md) for installation instructions and quick start gui
 We're continuously improving Flutter Chat Kits. Here's what's planned:
 
 ### Version 1.1.0 (Coming Soon)
+
 - Voice message recording UI
 - Message search functionality
 - Advanced filtering and sorting options
@@ -123,6 +141,7 @@ We're continuously improving Flutter Chat Kits. Here's what's planned:
 - Message threading
 
 ### Version 1.2.0
+
 - End-to-end encryption support
 - Message scheduling
 - Polls and surveys in chat
@@ -132,6 +151,7 @@ We're continuously improving Flutter Chat Kits. Here's what's planned:
 - Rich text formatting
 
 ### Version 2.0.0
+
 - Video/audio calling integration
 - Screen sharing capabilities
 - Live location sharing
@@ -146,6 +166,7 @@ We're continuously improving Flutter Chat Kits. Here's what's planned:
 ## 🤝 Contributing
 
 We welcome contributions from the community! Whether it's:
+
 - 🐛 Bug reports
 - 💡 Feature requests
 - 📝 Documentation improvements
