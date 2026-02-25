@@ -354,10 +354,12 @@ class Message extends Equatable {
     if (isDeletedForMe == true) deletes[me] = true;
 
     final pins = this.pins;
-    if (isPinned == true) {
-      pins[me] = true;
-    } else {
-      if (pins.containsKey(me)) pins.remove(me);
+    if (isPinned != null) {
+      if (isPinned) {
+        pins[me] = true;
+      } else {
+        if (pins.containsKey(me)) pins.remove(me);
+      }
     }
 
     final removes = this.removes;
@@ -365,10 +367,12 @@ class Message extends Equatable {
 
     final reactions = this.reactions;
     if (react != null) {
-      reactions[me] = react;
-    } else {
-      if (reactions.containsKey(me)) {
-        reactions.remove(me);
+      if (react.isNotEmpty) {
+        reactions[me] = react;
+      } else {
+        if (reactions.containsKey(me)) {
+          reactions.remove(me);
+        }
       }
     }
 

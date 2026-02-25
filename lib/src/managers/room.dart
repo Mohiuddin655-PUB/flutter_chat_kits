@@ -665,15 +665,59 @@ class RoomManager extends BaseNotifier {
     } catch (_) {}
   }
 
-  Future<void> block(String roomId, Iterable<String> participants) async {
+  Future<void> block(Room room, Iterable<String> participants) async {
     if (me.isEmpty) return;
+    put(room.copyWith(blocks: {...room.blocks, ...participants}));
     try {
       final value = _n.normalize({
         RoomKeys.blocks: ChatValueAdd([...participants]),
       }, _n.room);
-      await _room.update(roomId, value);
-      notify();
-    } catch (_) {}
+      await _room.update(room.id, value);
+    } catch (_) {
+      put(room);
+    }
+  }
+
+  Future<void> unblock(Room room, Iterable<String> participants) async {
+    if (me.isEmpty) return;
+    final blocks = room.blocks..removeAll(participants);
+    put(room.copyWith(blocks: blocks));
+    try {
+      final value = _n.normalize({
+        RoomKeys.blocks: ChatValueRemove([...participants]),
+      }, _n.room);
+      await _room.update(room.id, value);
+    } catch (_) {
+      put(room);
+    }
+  }
+
+  void pin(Room room) async {
+    if (me.isEmpty) return;
+    if (room.isPinnedByMe) return;
+    put(room.copyWith(isPinned: true));
+    try {
+      final value = _n.normalize({
+        "${RoomKeys.pins}.$me": true,
+      }, _n.room);
+      await _room.update(room.id, value);
+    } catch (_) {
+      put(room);
+    }
+  }
+
+  void unpin(Room room) async {
+    if (me.isEmpty) return;
+    if (!room.isPinnedByMe) return;
+    put(room.copyWith(isPinned: false));
+    try {
+      final value = _n.normalize({
+        "${RoomKeys.pins}.$me": ChatValueDelete(),
+      }, _n.room);
+      await _room.update(room.id, value);
+    } catch (_) {
+      put(room);
+    }
   }
 
   Future<void> addParticipants(String roomId, List<String> uids) async {

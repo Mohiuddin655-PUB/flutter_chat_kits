@@ -29,6 +29,7 @@ final class RoomKeys {
   static const updatedAt = 'updatedAt';
   static const mutes = 'mutes';
   static const blocks = 'blocks';
+  static const pins = 'pins';
   static const extra = 'extra';
 }
 
@@ -43,6 +44,7 @@ class Room extends Equatable {
   final Set<String> leaves;
   final Set<String> blocks;
   final Map<String, bool> mutes;
+  final Map<String, bool> pins;
   final RoomExtra extra;
 
   final String? lastMessage;
@@ -62,6 +64,8 @@ class Room extends Equatable {
   bool get isBlockByMe => blocks.contains(me);
 
   bool get isMutedByMe => isMuted(me);
+
+  bool get isPinnedByMe => isPinned(me);
 
   bool get isAdminByMe => createdBy == me;
 
@@ -101,6 +105,11 @@ class Room extends Equatable {
     return mutes[uid] ?? false;
   }
 
+  bool isPinned(String uid) {
+    if (uid.isEmpty) return false;
+    return pins[uid] ?? false;
+  }
+
   const Room.empty() : this();
 
   const Room({
@@ -114,6 +123,7 @@ class Room extends Equatable {
     this.leaves = const {},
     this.blocks = const {},
     this.mutes = const {},
+    this.pins = const {},
     this.extra = const {},
     this.lastMessage,
     this.lastMessageId = '',
@@ -149,6 +159,7 @@ class Room extends Equatable {
     final leaves = source[RoomKeys.leaves];
     final blocks = source[RoomKeys.blocks];
     final mutes = source[RoomKeys.mutes];
+    final pins = source[RoomKeys.pins];
 
     final room = Room(
       isLocal: false,
@@ -175,6 +186,7 @@ class Room extends Equatable {
               .toSet()
           : {},
       mutes: mutes is Map ? mutes.parse() : {},
+      pins: pins is Map ? pins.parse() : {},
       lastMessage:
           lastMessage is String && lastMessage.isNotEmpty ? lastMessage : null,
       lastMessageId: lastMessageId is String && lastMessageId.isNotEmpty
@@ -213,6 +225,7 @@ class Room extends Equatable {
     bool? isLocal,
     bool? isGroup,
     bool? isDeleted,
+    bool? isPinned,
     String? id,
     ChatValueTimestamp? createdAt,
     String? createdBy,
@@ -229,6 +242,15 @@ class Room extends Equatable {
     Map<String, int>? unseenCount,
     ChatValueTimestamp? updatedAt,
   }) {
+    final pins = this.pins;
+    if (isPinned != null) {
+      if (isPinned) {
+        pins[me] = true;
+      } else {
+        if (pins.containsKey(me)) pins.remove(me);
+      }
+    }
+
     return Room(
       blocks: blocks ?? this.blocks,
       createdAt: createdAt ?? this.createdAt,
@@ -245,6 +267,7 @@ class Room extends Equatable {
       lastMessageStatuses: lastMessageStatuses ?? this.lastMessageStatuses,
       leaves: leaves ?? this.leaves,
       mutes: mutes ?? this.mutes,
+      pins: pins,
       participants: participants ?? this.participants,
       unseenCount: unseenCount ?? _unseenCount,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -262,6 +285,7 @@ class Room extends Equatable {
       if (leaves.isNotEmpty) RoomKeys.leaves: leaves.toList(),
       if (blocks.isNotEmpty) RoomKeys.blocks: blocks.toList(),
       if (mutes.isNotEmpty) RoomKeys.mutes: mutes,
+      if (pins.isNotEmpty) RoomKeys.pins: pins,
       if ((lastMessage ?? '').isNotEmpty) RoomKeys.lastMessage: lastMessage,
       if (lastMessageId.isNotEmpty) RoomKeys.lastMessageId: lastMessageId,
       if (lastMessageSenderId.isNotEmpty)
@@ -289,6 +313,7 @@ class Room extends Equatable {
       leaves,
       blocks,
       mutes,
+      pins,
       lastMessage,
       lastMessageId,
       lastMessageSenderId,
@@ -321,6 +346,7 @@ class DirectRoom extends Room {
     super.leaves = const {},
     super.blocks = const {},
     super.mutes = const {},
+    super.pins = const {},
     super.lastMessage,
     super.lastMessageId,
     super.lastMessageSenderId = '',
@@ -342,6 +368,7 @@ class DirectRoom extends Room {
       leaves: room.leaves,
       blocks: room.blocks,
       mutes: room.mutes,
+      pins: room.pins,
       extra: room.extra,
       lastMessage: room.lastMessage,
       lastMessageId: room.lastMessageId,
@@ -359,6 +386,7 @@ class DirectRoom extends Room {
     bool? isLocal,
     bool? isGroup,
     bool? isDeleted,
+    bool? isPinned,
     String? id,
     ChatValueTimestamp? createdAt,
     String? createdBy,
@@ -375,24 +403,46 @@ class DirectRoom extends Room {
     Map<String, int>? unseenCount,
     ChatValueTimestamp? updatedAt,
   }) {
+    final room = super.copyWith(
+      blocks: blocks,
+      createdAt: createdAt,
+      createdBy: createdBy,
+      extra: extra,
+      id: id,
+      isDeleted: isDeleted,
+      isLocal: isLocal,
+      lastMessage: lastMessage,
+      lastMessageDeleted: lastMessageDeleted,
+      lastMessageId: lastMessageId,
+      lastMessageSenderId: lastMessageSenderId,
+      lastMessageStatuses: lastMessageStatuses,
+      leaves: leaves,
+      mutes: mutes,
+      isPinned: isPinned,
+      participants: participants,
+      unseenCount: unseenCount,
+      updatedAt: updatedAt,
+      isGroup: isGroup,
+    );
     return DirectRoom(
-      blocks: blocks ?? this.blocks,
-      createdAt: createdAt ?? this.createdAt,
-      createdBy: createdBy ?? this.createdBy,
-      extra: extra ?? this.extra,
-      id: id ?? this.id,
-      isDeleted: isDeleted ?? this.isDeleted,
-      isLocal: isLocal ?? this.isLocal,
-      lastMessage: lastMessage ?? this.lastMessage,
-      lastMessageDeleted: lastMessageDeleted ?? this.lastMessageDeleted,
-      lastMessageId: lastMessageId ?? this.lastMessageId,
-      lastMessageSenderId: lastMessageSenderId ?? this.lastMessageSenderId,
-      lastMessageStatuses: lastMessageStatuses ?? this.lastMessageStatuses,
-      leaves: leaves ?? this.leaves,
-      mutes: mutes ?? this.mutes,
-      participants: participants ?? this.participants,
-      unseenCount: unseenCount ?? _unseenCount,
-      updatedAt: updatedAt ?? this.updatedAt,
+      blocks: room.blocks,
+      createdAt: room.createdAt,
+      createdBy: room.createdBy,
+      extra: room.extra,
+      id: room.id,
+      isDeleted: room.isDeleted,
+      isLocal: room.isLocal,
+      lastMessage: room.lastMessage,
+      lastMessageDeleted: room.lastMessageDeleted,
+      lastMessageId: room.lastMessageId,
+      lastMessageSenderId: room.lastMessageSenderId,
+      lastMessageStatuses: room.lastMessageStatuses,
+      leaves: room.leaves,
+      mutes: room.mutes,
+      pins: room.pins,
+      participants: room.participants,
+      unseenCount: room._unseenCount,
+      updatedAt: room.updatedAt,
     );
   }
 }
@@ -413,6 +463,7 @@ class GroupRoom extends Room {
     super.leaves = const {},
     super.blocks = const {},
     super.mutes = const {},
+    super.pins = const {},
     super.extra,
     super.lastMessage,
     super.lastMessageId,
@@ -435,6 +486,7 @@ class GroupRoom extends Room {
       leaves: room.leaves,
       blocks: room.blocks,
       mutes: room.mutes,
+      pins: room.pins,
       extra: room.extra,
       lastMessage: room.lastMessage,
       lastMessageId: room.lastMessageId,
@@ -454,6 +506,7 @@ class GroupRoom extends Room {
     bool? isLocal,
     bool? isGroup,
     bool? isDeleted,
+    bool? isPinned,
     String? id,
     ChatValueTimestamp? createdAt,
     String? createdBy,
@@ -472,26 +525,48 @@ class GroupRoom extends Room {
     String? name,
     String? photo,
   }) {
+    final room = super.copyWith(
+      blocks: blocks,
+      createdAt: createdAt,
+      createdBy: createdBy,
+      extra: extra,
+      id: id,
+      isDeleted: isDeleted,
+      isLocal: isLocal,
+      lastMessage: lastMessage,
+      lastMessageDeleted: lastMessageDeleted,
+      lastMessageId: lastMessageId,
+      lastMessageSenderId: lastMessageSenderId,
+      lastMessageStatuses: lastMessageStatuses,
+      leaves: leaves,
+      mutes: mutes,
+      isPinned: isPinned,
+      participants: participants,
+      unseenCount: unseenCount,
+      updatedAt: updatedAt,
+      isGroup: isGroup,
+    );
     return GroupRoom(
-      blocks: blocks ?? this.blocks,
-      createdAt: createdAt ?? this.createdAt,
-      createdBy: createdBy ?? this.createdBy,
-      extra: extra ?? this.extra,
-      id: id ?? this.id,
-      isDeleted: isDeleted ?? this.isDeleted,
-      isLocal: isLocal ?? this.isLocal,
-      lastMessage: lastMessage ?? this.lastMessage,
-      lastMessageDeleted: lastMessageDeleted ?? this.lastMessageDeleted,
-      lastMessageId: lastMessageId ?? this.lastMessageId,
-      lastMessageSenderId: lastMessageSenderId ?? this.lastMessageSenderId,
-      lastMessageStatuses: lastMessageStatuses ?? this.lastMessageStatuses,
-      leaves: leaves ?? this.leaves,
-      mutes: mutes ?? this.mutes,
+      blocks: room.blocks,
+      createdAt: room.createdAt,
+      createdBy: room.createdBy,
+      extra: room.extra,
+      id: room.id,
+      isDeleted: room.isDeleted,
+      isLocal: room.isLocal,
+      lastMessage: room.lastMessage,
+      lastMessageDeleted: room.lastMessageDeleted,
+      lastMessageId: room.lastMessageId,
+      lastMessageSenderId: room.lastMessageSenderId,
+      lastMessageStatuses: room.lastMessageStatuses,
+      leaves: room.leaves,
+      mutes: room.mutes,
+      pins: room.pins,
+      participants: room.participants,
+      unseenCount: room._unseenCount,
+      updatedAt: room.updatedAt,
       name: name ?? this.name,
-      participants: participants ?? this.participants,
       photo: photo ?? this.photo,
-      unseenCount: unseenCount ?? _unseenCount,
-      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
