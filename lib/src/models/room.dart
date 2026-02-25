@@ -33,6 +33,7 @@ final class RoomKeys {
 }
 
 class Room extends Equatable {
+  final bool isLocal;
   final bool isGroup;
   final bool isDeleted;
   final String id;
@@ -103,6 +104,7 @@ class Room extends Equatable {
   const Room.empty() : this();
 
   const Room({
+    this.isLocal = false,
     this.isDeleted = false,
     this.isGroup = false,
     this.id = '',
@@ -149,6 +151,7 @@ class Room extends Equatable {
     final mutes = source[RoomKeys.mutes];
 
     final room = Room(
+      isLocal: false,
       isDeleted: isDeleted is bool ? isDeleted : false,
       id: id is String && id.isNotEmpty ? id : '',
       createdBy: createdBy is String && createdBy.isNotEmpty ? createdBy : '',
@@ -204,6 +207,48 @@ class Room extends Equatable {
       );
     }
     return DirectRoom.from(room);
+  }
+
+  Room copyWith({
+    bool? isLocal,
+    bool? isGroup,
+    bool? isDeleted,
+    String? id,
+    ChatValueTimestamp? createdAt,
+    String? createdBy,
+    Set<String>? participants,
+    Set<String>? leaves,
+    Set<String>? blocks,
+    Map<String, bool>? mutes,
+    RoomExtra? extra,
+    String? lastMessage,
+    String? lastMessageId,
+    String? lastMessageSenderId,
+    bool? lastMessageDeleted,
+    Map<String, MessageStatus>? lastMessageStatuses,
+    Map<String, int>? unseenCount,
+    ChatValueTimestamp? updatedAt,
+  }) {
+    return Room(
+      blocks: blocks ?? this.blocks,
+      createdAt: createdAt ?? this.createdAt,
+      createdBy: createdBy ?? this.createdBy,
+      extra: extra ?? this.extra,
+      id: id ?? this.id,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isGroup: isGroup ?? this.isGroup,
+      isLocal: isLocal ?? this.isLocal,
+      lastMessage: lastMessage ?? this.lastMessage,
+      lastMessageDeleted: lastMessageDeleted ?? this.lastMessageDeleted,
+      lastMessageId: lastMessageId ?? this.lastMessageId,
+      lastMessageSenderId: lastMessageSenderId ?? this.lastMessageSenderId,
+      lastMessageStatuses: lastMessageStatuses ?? this.lastMessageStatuses,
+      leaves: leaves ?? this.leaves,
+      mutes: mutes ?? this.mutes,
+      participants: participants ?? this.participants,
+      unseenCount: unseenCount ?? _unseenCount,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
   }
 
   Map<String, dynamic> get source {
@@ -268,6 +313,7 @@ class DirectRoom extends Room {
   const DirectRoom.empty() : this();
 
   const DirectRoom({
+    super.isLocal,
     super.id = '',
     super.createdAt,
     super.createdBy = '',
@@ -288,6 +334,7 @@ class DirectRoom extends Room {
 
   factory DirectRoom.from(Room room) {
     return DirectRoom(
+      isLocal: room.isLocal,
       id: room.id,
       createdBy: room.createdBy,
       createdAt: room.createdAt,
@@ -306,6 +353,48 @@ class DirectRoom extends Room {
       isDeleted: room.isDeleted,
     );
   }
+
+  @override
+  DirectRoom copyWith({
+    bool? isLocal,
+    bool? isGroup,
+    bool? isDeleted,
+    String? id,
+    ChatValueTimestamp? createdAt,
+    String? createdBy,
+    Set<String>? participants,
+    Set<String>? leaves,
+    Set<String>? blocks,
+    Map<String, bool>? mutes,
+    RoomExtra? extra,
+    String? lastMessage,
+    String? lastMessageId,
+    String? lastMessageSenderId,
+    bool? lastMessageDeleted,
+    Map<String, MessageStatus>? lastMessageStatuses,
+    Map<String, int>? unseenCount,
+    ChatValueTimestamp? updatedAt,
+  }) {
+    return DirectRoom(
+      blocks: blocks ?? this.blocks,
+      createdAt: createdAt ?? this.createdAt,
+      createdBy: createdBy ?? this.createdBy,
+      extra: extra ?? this.extra,
+      id: id ?? this.id,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isLocal: isLocal ?? this.isLocal,
+      lastMessage: lastMessage ?? this.lastMessage,
+      lastMessageDeleted: lastMessageDeleted ?? this.lastMessageDeleted,
+      lastMessageId: lastMessageId ?? this.lastMessageId,
+      lastMessageSenderId: lastMessageSenderId ?? this.lastMessageSenderId,
+      lastMessageStatuses: lastMessageStatuses ?? this.lastMessageStatuses,
+      leaves: leaves ?? this.leaves,
+      mutes: mutes ?? this.mutes,
+      participants: participants ?? this.participants,
+      unseenCount: unseenCount ?? _unseenCount,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }
 
 class GroupRoom extends Room {
@@ -315,6 +404,7 @@ class GroupRoom extends Room {
   const GroupRoom.empty() : this();
 
   const GroupRoom({
+    super.isLocal,
     super.createdAt,
     super.updatedAt,
     super.id = '',
@@ -337,6 +427,7 @@ class GroupRoom extends Room {
 
   factory GroupRoom.from(Room room, String? name, String? photo) {
     return GroupRoom(
+      isLocal: room.isLocal,
       id: room.id,
       createdBy: room.createdBy,
       createdAt: room.createdAt,
@@ -355,6 +446,52 @@ class GroupRoom extends Room {
       isDeleted: room.isDeleted,
       name: name,
       photo: photo,
+    );
+  }
+
+  @override
+  GroupRoom copyWith({
+    bool? isLocal,
+    bool? isGroup,
+    bool? isDeleted,
+    String? id,
+    ChatValueTimestamp? createdAt,
+    String? createdBy,
+    Set<String>? participants,
+    Set<String>? leaves,
+    Set<String>? blocks,
+    Map<String, bool>? mutes,
+    RoomExtra? extra,
+    String? lastMessage,
+    String? lastMessageId,
+    String? lastMessageSenderId,
+    bool? lastMessageDeleted,
+    Map<String, MessageStatus>? lastMessageStatuses,
+    Map<String, int>? unseenCount,
+    ChatValueTimestamp? updatedAt,
+    String? name,
+    String? photo,
+  }) {
+    return GroupRoom(
+      blocks: blocks ?? this.blocks,
+      createdAt: createdAt ?? this.createdAt,
+      createdBy: createdBy ?? this.createdBy,
+      extra: extra ?? this.extra,
+      id: id ?? this.id,
+      isDeleted: isDeleted ?? this.isDeleted,
+      isLocal: isLocal ?? this.isLocal,
+      lastMessage: lastMessage ?? this.lastMessage,
+      lastMessageDeleted: lastMessageDeleted ?? this.lastMessageDeleted,
+      lastMessageId: lastMessageId ?? this.lastMessageId,
+      lastMessageSenderId: lastMessageSenderId ?? this.lastMessageSenderId,
+      lastMessageStatuses: lastMessageStatuses ?? this.lastMessageStatuses,
+      leaves: leaves ?? this.leaves,
+      mutes: mutes ?? this.mutes,
+      name: name ?? this.name,
+      participants: participants ?? this.participants,
+      photo: photo ?? this.photo,
+      unseenCount: unseenCount ?? _unseenCount,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 

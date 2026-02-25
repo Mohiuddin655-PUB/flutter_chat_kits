@@ -4,18 +4,23 @@ import 'package:flutter_chat_kits/flutter_chat_kits.dart';
 import 'package:share_plus/share_plus.dart';
 
 class ChatMessageContextMenu extends StatefulWidget {
+  final ChatManager manager;
   final Message message;
 
   const ChatMessageContextMenu({
     super.key,
+    required this.manager,
     required this.message,
   });
 
-  static void show(BuildContext context, Message message) {
+  static void show(BuildContext context, ChatManager manager, Message message) {
     showModalBottomSheet(
       isDismissible: true,
       context: context,
-      builder: (c) => ChatMessageContextMenu(message: message),
+      builder: (c) => ChatMessageContextMenu(
+        manager: manager,
+        message: message,
+      ),
     );
   }
 
@@ -50,7 +55,7 @@ class _ChatMessageContextMenuState extends State<ChatMessageContextMenu> {
               label: 'Reply',
               onTap: () {
                 Navigator.pop(context);
-                ChatManager.i.reply(msg);
+                widget.manager.reply(msg);
               },
             ),
             if (isMe && (msg is TextMessage || msg is LinkMessage))
@@ -79,7 +84,7 @@ class _ChatMessageContextMenuState extends State<ChatMessageContextMenu> {
               label: msg.isPinned ? 'Unpin' : 'Pin',
               onTap: () {
                 Navigator.pop(context);
-                ChatManager.i.togglePin(msg);
+                widget.manager.togglePin(msg);
               },
             ),
             _buildMenuItem(
@@ -111,7 +116,7 @@ class _ChatMessageContextMenuState extends State<ChatMessageContextMenu> {
               label: 'Remove',
               onTap: () {
                 Navigator.pop(context);
-                ChatManager.i.remove(msg);
+                widget.manager.remove(msg);
               },
               textColor: Colors.red,
             )
@@ -133,7 +138,7 @@ class _ChatMessageContextMenuState extends State<ChatMessageContextMenu> {
               label: 'Delete for me',
               onTap: () {
                 Navigator.pop(context);
-                ChatManager.i.deleteForMe(msg);
+                widget.manager.deleteForMe(msg);
               },
               textColor: Colors.red,
             ),
@@ -153,7 +158,7 @@ class _ChatMessageContextMenuState extends State<ChatMessageContextMenu> {
           return GestureDetector(
             onTap: () {
               Navigator.pop(context);
-              ChatManager.i.react(msg, reaction);
+              widget.manager.react(msg, reaction);
             },
             child: Container(
               padding: const EdgeInsets.all(8),
@@ -204,7 +209,7 @@ class _ChatMessageContextMenuState extends State<ChatMessageContextMenu> {
                 title: const Text('Delete for everyone'),
                 onTap: () {
                   Navigator.pop(dialogContext);
-                  ChatManager.i.delete(
+                  widget.manager.delete(
                     widget.message,
                   );
                 },
@@ -213,7 +218,7 @@ class _ChatMessageContextMenuState extends State<ChatMessageContextMenu> {
               title: const Text('Delete for me'),
               onTap: () {
                 Navigator.pop(dialogContext);
-                ChatManager.i.deleteForMe(widget.message);
+                widget.manager.deleteForMe(widget.message);
               },
             ),
           ],
@@ -279,7 +284,7 @@ class _ChatMessageContextMenuState extends State<ChatMessageContextMenu> {
           TextButton(
             onPressed: () {
               final newContent = controller.text.trim();
-              ChatManager.i.edit(widget.message, newContent);
+              widget.manager.edit(widget.message, newContent);
               Navigator.pop(dialogContext);
             },
             child: const Text('Save'),

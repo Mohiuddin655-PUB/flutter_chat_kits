@@ -1,19 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_kits/flutter_chat_kits.dart';
 
-class ChatPage extends StatefulWidget {
-  const ChatPage({super.key});
+class ChatPage extends StatelessWidget {
+  final ChatManager manager;
 
-  @override
-  State<ChatPage> createState() => _ChatPageState();
-}
+  const ChatPage({super.key, required this.manager});
 
-class _ChatPageState extends State<ChatPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: ChatAppbar(),
-      body: ChatBody(),
+      appBar: ChatAppbar(manager: manager),
+      body: ChatBody(manager: manager),
     );
   }
 }

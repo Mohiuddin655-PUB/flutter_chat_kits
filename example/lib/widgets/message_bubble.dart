@@ -6,11 +6,13 @@ import 'actions.dart';
 import 'reply_snippet.dart';
 
 class ChatMessageBubble extends StatefulWidget {
+  final ChatManager manager;
   final Message message;
   final Widget child;
 
   const ChatMessageBubble({
     super.key,
+    required this.manager,
     required this.message,
     required this.child,
   });
@@ -28,7 +30,7 @@ class _ChatMessageBubbleState extends State<ChatMessageBubble>
     final isMe = widget.message.isSentByMe;
     return GestureDetector(
       onLongPress: () {
-        ChatMessageContextMenu.show(context, widget.message);
+        ChatMessageContextMenu.show(context, widget.manager, widget.message);
       },
       child: Slidable(
         controller: controller,
@@ -39,7 +41,7 @@ class _ChatMessageBubbleState extends State<ChatMessageBubble>
             GestureDetector(
               onTap: () {
                 controller.close();
-                ChatManager.i.reply(widget.message);
+                widget.manager.reply(widget.message);
               },
               child: Icon(
                 Icons.reply_outlined,
@@ -177,7 +179,7 @@ class _ChatMessageBubbleState extends State<ChatMessageBubble>
                                 widget.message.reactions.entries.map((entry) {
                               return GestureDetector(
                                 onTap: () {
-                                  ChatManager.i.react(widget.message, null);
+                                  widget.manager.react(widget.message, null);
                                 },
                                 child: Text(
                                   entry.value,

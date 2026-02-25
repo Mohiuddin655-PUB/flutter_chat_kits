@@ -114,7 +114,7 @@ class _ChatInboxDirectState extends State<ChatInboxDirect>
     final isMuted = widget.room.isMutedByMe;
 
     return InkWell(
-      onTap: () => RoomManager.i.open(context, widget.room),
+      onTap: () => RoomManager.i.connect(context, widget.room),
       child: Slidable(
         controller: controller,
         direction: Axis.horizontal,

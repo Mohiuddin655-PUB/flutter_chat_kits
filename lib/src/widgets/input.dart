@@ -8,7 +8,9 @@ import '../models/message.dart';
 import '../utils/chat_ui.dart';
 
 class ChatInput extends StatefulWidget {
-  const ChatInput({super.key});
+  final ChatManager manager;
+
+  const ChatInput({super.key, required this.manager});
 
   @override
   State<ChatInput> createState() => _ChatInputState();
@@ -41,7 +43,7 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     if (state != AppLifecycleState.resumed) {
       if (_isTyping) {
         _isTyping = false;
-        ChatManager.i.typing(false);
+        widget.manager.typing(false);
       }
     }
   }
@@ -49,14 +51,14 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
   void _onTextChanged() {
     if (_controller.text.isNotEmpty && !_isTyping) {
       _isTyping = true;
-      ChatManager.i.typing(true);
+      widget.manager.typing(true);
     }
 
     _typingTimer?.cancel();
     _typingTimer = Timer(const Duration(seconds: 2), () {
       if (_isTyping) {
         _isTyping = false;
-        ChatManager.i.typing(false);
+        widget.manager.typing(false);
       }
     });
   }
@@ -68,9 +70,12 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     _typingTimer?.cancel();
     if (_isTyping) {
       _isTyping = false;
-      ChatManager.i.typing(false);
+      widget.manager.typing(false);
     }
-    ChatManager.i.send(TextMessage.create(text));
+    widget.manager.send(TextMessage.create(
+      roomId: widget.manager.roomId,
+      text: text,
+    ));
     _controller.clear();
   }
 
@@ -79,7 +84,11 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     final images = await i.onMutiImagePicker!(context);
     if (images.isEmpty) return;
     final text = _controller.text.trim();
-    ChatManager.i.send(ImageMessage.create(images, text.isEmpty ? null : text));
+    widget.manager.send(ImageMessage.create(
+      roomId: widget.manager.roomId,
+      paths: images,
+      caption: text.isEmpty ? null : text,
+    ));
   }
 
   Future<void> _sendCapturedImage() async {
@@ -87,13 +96,21 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     final image = await i.onImageCapture!(context);
     if (image == null) return;
     final text = _controller.text.trim();
-    ChatManager.i.send(
-      ImageMessage.create([image], text.isEmpty ? null : text),
+    widget.manager.send(
+      ImageMessage.create(
+        roomId: widget.manager.roomId,
+        paths: [image],
+        caption: text.isEmpty ? null : text,
+      ),
     );
   }
 
   Future<void> _sendVoice(String path, int duration) async {
-    ChatManager.i.send(AudioMessage.create(path, duration));
+    widget.manager.send(AudioMessage.create(
+      roomId: widget.manager.roomId,
+      path: path,
+      durationInSec: duration,
+    ));
   }
 
   Future<void> _sendCapturedVideo() async {
@@ -107,12 +124,13 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     final thumbnail = await i.onVideoThumbnail!(context, video);
     if (thumbnail == null || thumbnail.isEmpty) return;
     final text = _controller.text.trim();
-    ChatManager.i.send(
+    widget.manager.send(
       VideoMessage.create(
-        video,
-        thumbnail,
-        duration,
-        text.isEmpty ? null : text,
+        roomId: widget.manager.roomId,
+        path: video,
+        thumbnail: thumbnail,
+        durationInSec: duration,
+        caption: text.isEmpty ? null : text,
       ),
     );
   }
@@ -128,12 +146,13 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     final thumbnail = await i.onVideoThumbnail!(context, video);
     if (thumbnail == null || thumbnail.isEmpty) return;
     final text = _controller.text.trim();
-    ChatManager.i.send(
+    widget.manager.send(
       VideoMessage.create(
-        video,
-        thumbnail,
-        duration,
-        text.isEmpty ? null : text,
+        roomId: widget.manager.roomId,
+        path: video,
+        thumbnail: thumbnail,
+        durationInSec: duration,
+        caption: text.isEmpty ? null : text,
       ),
     );
   }
@@ -146,6 +165,7 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     return i.inputBuilder!(
       context,
       ChatInputConfigs(
+        manager: widget.manager,
         editor: _controller,
         onCaptureImage: _sendCapturedImage,
         onSendText: _sendText,

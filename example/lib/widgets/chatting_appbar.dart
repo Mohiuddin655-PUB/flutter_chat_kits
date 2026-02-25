@@ -3,15 +3,11 @@ import 'package:flutter_chat_kits/flutter_chat_kits.dart';
 import 'package:intl/intl.dart';
 
 class ChattingAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final Profile profile;
-  final Status status;
-  final List<Typing> typings;
+  final ChatAppbarConfigs configs;
 
   const ChattingAppBar({
     super.key,
-    required this.profile,
-    required this.status,
-    required this.typings,
+    required this.configs,
   });
 
   String _getLastOnlineText(DateTime? lastOnline) {
@@ -32,7 +28,7 @@ class ChattingAppBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final activeIndicator =
-        _buildActiveIndicator(status.lastSeen.timestampOrNull);
+        _buildActiveIndicator(configs.status.lastSeen.timestampOrNull);
     return AppBar(
       titleSpacing: 0,
       title: Row(
@@ -42,11 +38,13 @@ class ChattingAppBar extends StatelessWidget implements PreferredSizeWidget {
               CircleAvatar(
                 radius: 28,
                 backgroundColor: Colors.grey[300],
-                backgroundImage:
-                    profile.photo != null ? NetworkImage(profile.photo!) : null,
-                child: profile.photo == null
+                backgroundImage: configs.profile.photo != null
+                    ? NetworkImage(configs.profile.photo!)
+                    : null,
+                child: configs.profile.photo == null
                     ? Text(
-                        profile.name.characters.firstOrNull?.toUpperCase() ??
+                        configs.profile.name.characters.firstOrNull
+                                ?.toUpperCase() ??
                             "?",
                         style: const TextStyle(
                           fontSize: 24,
@@ -69,18 +67,19 @@ class ChattingAppBar extends StatelessWidget implements PreferredSizeWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  profile.name,
+                  configs.profile.name,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
-                  typings.isNotEmpty
+                  configs.isTyping
                       ? "Typing..."
-                      : status.isOnline == true
+                      : configs.status.isOnline == true
                           ? 'Active now'
-                          : _getLastOnlineText(status.lastSeen.timestampOrNull),
+                          : _getLastOnlineText(
+                              configs.status.lastSeen.timestampOrNull),
                   style: TextStyle(
                     fontSize: 12,
                     color: Colors.grey[600],
@@ -96,7 +95,7 @@ class ChattingAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget? _buildActiveIndicator(DateTime? lastOnline) {
-    if (status.isOnline) {
+    if (configs.status.isOnline) {
       return Container(
         width: 16,
         height: 16,

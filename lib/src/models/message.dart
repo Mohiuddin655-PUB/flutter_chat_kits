@@ -111,7 +111,7 @@ class Message extends Equatable {
   String? get reactByMe => reactions[me];
 
   Message get replyMessage {
-    final msg = ChatManager.i.mappedMessages[replyId];
+    final msg = ChatManager.ofOrNull(roomId)?.mappedMessages[replyId];
     if (msg == null) return Message.empty();
     if (msg.isDeleted || msg.isDeletedByMe) return Message.empty();
     return msg;
@@ -472,12 +472,12 @@ class AudioMessage extends Message {
 
   const AudioMessage.empty() : this._();
 
-  factory AudioMessage.create(
-    String path,
-    int durationInSec, {
+  factory AudioMessage.create({
+    required String roomId,
+    required String path,
+    required int durationInSec,
     MessageExtra? extra,
     String? id,
-    String? roomId,
     String? senderId,
     String? replyId,
     ChatValueTimestamp? createdAt,
@@ -485,8 +485,7 @@ class AudioMessage extends Message {
     senderId ??= RoomManager.i.me;
     if (senderId.isEmpty) return AudioMessage.empty();
     id ??= ChatHelper.generateMessageId();
-    roomId ??= ChatManager.i.roomId;
-    replyId ??= ChatManager.i.replyMsg?.id;
+    replyId ??= ChatManager.ofOrNull(roomId)?.replyMsg?.id;
     createdAt ??= ChatValueTimestamp.now();
     return AudioMessage._(
       id: id,
@@ -627,12 +626,12 @@ class ImageMessage extends Message {
 
   const ImageMessage.empty() : this._();
 
-  factory ImageMessage.create(
-    List<String> paths,
-    String? caption, {
+  factory ImageMessage.create({
+    required String roomId,
+    required List<String> paths,
+    String? caption,
     MessageExtra? extra,
     String? id,
-    String? roomId,
     String? senderId,
     String? replyId,
     ChatValueTimestamp? createdAt,
@@ -640,8 +639,7 @@ class ImageMessage extends Message {
     senderId ??= RoomManager.i.me;
     if (senderId.isEmpty) return ImageMessage.empty();
     id ??= ChatHelper.generateMessageId();
-    roomId ??= ChatManager.i.roomId;
-    replyId ??= ChatManager.i.replyMsg?.id;
+    replyId ??= ChatManager.ofOrNull(roomId)?.replyMsg?.id;
     createdAt ??= ChatValueTimestamp.now();
     return ImageMessage._(
       id: id,
@@ -780,10 +778,10 @@ class LinkMessage extends Message {
 
   const LinkMessage.empty() : this._();
 
-  factory LinkMessage.create(
-    String link, {
+  factory LinkMessage.create({
+    required String roomId,
+    required String link,
     MessageExtra? extra,
-    String? roomId,
     String? id,
     String? senderId,
     String? replyId,
@@ -792,8 +790,7 @@ class LinkMessage extends Message {
     senderId ??= RoomManager.i.me;
     if (senderId.isEmpty) return LinkMessage.empty();
     id ??= ChatHelper.generateMessageId();
-    roomId ??= ChatManager.i.roomId;
-    replyId ??= ChatManager.i.replyMsg?.id;
+    replyId ??= ChatManager.ofOrNull(roomId)?.replyMsg?.id;
     createdAt ??= ChatValueTimestamp.now();
     return LinkMessage._(
       id: id,
@@ -924,10 +921,10 @@ class TextMessage extends Message {
 
   const TextMessage.empty() : this._();
 
-  factory TextMessage.create(
-    String text, {
+  factory TextMessage.create({
+    required String roomId,
+    required String text,
     MessageExtra? extra,
-    String? roomId,
     String? id,
     String? senderId,
     String? replyId,
@@ -936,8 +933,7 @@ class TextMessage extends Message {
     senderId ??= RoomManager.i.me;
     if (senderId.isEmpty) return TextMessage.empty();
     id ??= ChatHelper.generateMessageId();
-    roomId ??= ChatManager.i.roomId;
-    replyId ??= ChatManager.i.replyMsg?.id;
+    replyId ??= ChatManager.ofOrNull(roomId)?.replyMsg?.id;
     createdAt ??= ChatValueTimestamp.now();
     return TextMessage._(
       id: id,
@@ -1076,13 +1072,13 @@ class VideoMessage extends Message {
 
   const VideoMessage.empty() : this._();
 
-  factory VideoMessage.create(
-    String path,
-    String thumbnail,
-    int durationInSec,
-    String? caption, {
+  factory VideoMessage.create({
+    required String roomId,
+    required String path,
+    required String thumbnail,
+    required int durationInSec,
+    String? caption,
     MessageExtra? extra,
-    String? roomId,
     String? id,
     String? senderId,
     String? replyId,
@@ -1091,8 +1087,7 @@ class VideoMessage extends Message {
     senderId ??= RoomManager.i.me;
     if (senderId.isEmpty) return VideoMessage.empty();
     id ??= ChatHelper.generateMessageId();
-    roomId ??= ChatManager.i.roomId;
-    replyId ??= ChatManager.i.replyMsg?.id;
+    replyId ??= ChatManager.ofOrNull(roomId)?.replyMsg?.id;
     createdAt ??= ChatValueTimestamp.now();
     return VideoMessage._(
       id: id,

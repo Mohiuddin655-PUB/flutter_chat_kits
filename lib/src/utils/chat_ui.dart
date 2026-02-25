@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../managers/chat.dart';
 import '../models/message.dart';
 import '../models/profile.dart';
 import '../models/room.dart';
@@ -8,9 +9,7 @@ import '../models/typing.dart';
 
 typedef ChatAppbarBuilder<T extends Typing> = Widget Function(
   BuildContext context,
-  Profile profile,
-  Status status,
-  List<T> typings,
+  ChatAppbarConfigs,
 );
 typedef ChatVisibilityBuilder = Widget Function(
   BuildContext context,
@@ -32,7 +31,7 @@ typedef ChatReplayMessagePreviewBuilder<T extends Message> = Widget Function(
 typedef ChatScrollDownButtonBuilder<T extends Message> = Widget Function(
     BuildContext context, List<T> unseen, VoidCallback onGo);
 typedef ChatMessageBuilder<T extends Message> = Widget Function(
-    BuildContext context, T message);
+    BuildContext context, ChatManager manager, T message);
 typedef ChatTypingBuilder<T extends Typing> = Widget Function(
     BuildContext context, List<T> typings);
 typedef ChatProfileBuilder<T extends Profile> = Widget Function(
@@ -40,7 +39,7 @@ typedef ChatProfileBuilder<T extends Profile> = Widget Function(
 typedef ChatGroupDateBuilder = Widget Function(
     BuildContext context, DateTime date);
 typedef ChattingPageCallback<T extends Object?> = Future<T?> Function(
-    BuildContext context, Room room);
+    BuildContext context, ChatManager manager);
 typedef ChatContentPickerCallback = Future<String?> Function(
     BuildContext context);
 typedef ChatContentsPickerCallback = Future<List<String>> Function(
@@ -62,7 +61,24 @@ class ChatVisibilityInfo {
   });
 }
 
+class ChatAppbarConfigs {
+  final ChatManager manager;
+  final Profile profile;
+  final Status status;
+  final List<Typing> typings;
+
+  bool get isTyping => typings.isNotEmpty;
+
+  const ChatAppbarConfigs({
+    required this.manager,
+    required this.profile,
+    required this.status,
+    required this.typings,
+  });
+}
+
 class ChatInputConfigs {
+  final ChatManager manager;
   final TextEditingController editor;
   final VoidCallback onCaptureImage;
   final VoidCallback onSendText;
@@ -72,6 +88,7 @@ class ChatInputConfigs {
   final VoidCallback onSendVideo;
 
   const ChatInputConfigs({
+    required this.manager,
     required this.editor,
     required this.onCaptureImage,
     required this.onSendText,
@@ -83,23 +100,25 @@ class ChatInputConfigs {
 }
 
 class ChatUiConfigs {
-  final ChatAppbarBuilder<Typing> chatAppbarBuilder;
-  final ChatInboxBuilder<DirectRoom, Typing?> directInboxBuilder;
-  final ChatInboxBuilder<GroupRoom, List<Typing>> groupInboxBuilder;
-  final ChatMessageBuilder<AudioMessage> audioBuilder;
-  final ChatMessageBuilder<Message> deletedBuilder;
-  final ChatMessageBuilder<ImageMessage> imageBuilder;
-  final ChatMessageBuilder<LinkMessage> linkBuilder;
-  final ChatMessageBuilder<TextMessage> textBuilder;
-  final ChatMessageBuilder<VideoMessage> videoBuilder;
-  final ChatGroupDateBuilder groupDateBuilder;
+  final ChatAppbarBuilder<Typing>? chatAppbarBuilder;
+  final ChatInboxBuilder<DirectRoom, Typing?>? directInboxBuilder;
+  final ChatInboxBuilder<GroupRoom, List<Typing>>? groupInboxBuilder;
+  final ChatMessageBuilder<AudioMessage>? audioBuilder;
+  final ChatMessageBuilder<Message>? deletedBuilder;
+  final ChatMessageBuilder<ImageMessage>? imageBuilder;
+  final ChatMessageBuilder<LinkMessage>? linkBuilder;
+  final ChatMessageBuilder<TextMessage>? textBuilder;
+  final ChatMessageBuilder<VideoMessage>? videoBuilder;
+  final ChatGroupDateBuilder? groupDateBuilder;
   final ChatProfileBuilder<Profile>? profileBuilder;
   final ChatTypingBuilder<Typing>? typingBuilder;
+  final WidgetBuilder? blockedInputBuilder;
+  final WidgetBuilder? leaveFromRoomBuilder;
   final ChatReplayMessagePreviewBuilder<Message>? replayMessageReplyBuilder;
   final ChatInputBuilder<Message>? inputBuilder;
   final ChatScrollDownButtonBuilder<Message>? scrollDownButtonBuilder;
   final WidgetBuilder? noMessagesBuilder;
-  final ChatVisibilityBuilder visibilityDetectorBuilder;
+  final ChatVisibilityBuilder? visibilityDetectorBuilder;
   final ChattingPageCallback onChatStart;
   final ChatContentPickerCallback? onImageCapture;
   final ChatContentPickerCallback? onImagePicker;
@@ -110,19 +129,19 @@ class ChatUiConfigs {
   final ChatVideoThumbnailCallback? onVideoThumbnail;
 
   const ChatUiConfigs({
-    required this.chatAppbarBuilder,
-    required this.directInboxBuilder,
-    required this.groupInboxBuilder,
-    required this.audioBuilder,
-    required this.deletedBuilder,
-    required this.imageBuilder,
-    required this.linkBuilder,
-    required this.textBuilder,
-    required this.videoBuilder,
-    required this.groupDateBuilder,
-    this.noMessagesBuilder,
-    required this.visibilityDetectorBuilder,
     required this.onChatStart,
+    this.chatAppbarBuilder,
+    this.directInboxBuilder,
+    this.groupInboxBuilder,
+    this.audioBuilder,
+    this.deletedBuilder,
+    this.imageBuilder,
+    this.linkBuilder,
+    this.textBuilder,
+    this.videoBuilder,
+    this.groupDateBuilder,
+    this.noMessagesBuilder,
+    this.visibilityDetectorBuilder,
     this.profileBuilder,
     this.typingBuilder,
     this.replayMessageReplyBuilder,
@@ -135,5 +154,7 @@ class ChatUiConfigs {
     this.onVideoPicker,
     this.onVideoDuration,
     this.onVideoThumbnail,
+    this.blockedInputBuilder,
+    this.leaveFromRoomBuilder,
   });
 }

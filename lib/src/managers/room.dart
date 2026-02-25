@@ -174,80 +174,115 @@ class RoomManager extends BaseNotifier {
   final Map<String, StreamSubscription> _statusSubs = {};
   final Map<String, StreamSubscription> _typingSubs = {};
   final Map<String, StreamSubscription> _profileSubs = {};
+  final Map<String, ChatManager> _mappedManagers = {};
 
-  void _listenStatuses(Iterable<String> actives, Iterable<String> leaves) {
-    if (actives.isEmpty) return;
-    for (final uid in actives) {
-      if (uid.isEmpty) {
-        continue;
-      }
-      if (!isActive) {
-        continue;
-      }
-      if (!isConnected) {
-        continue;
-      }
-      if (_statusSubs.containsKey(uid)) {
-        if (leaves.contains(uid)) {
-          _statusSubs[uid]?.cancel();
+  void _listenMeProfile() {
+    final uid = me;
+    if (uid.isEmpty) {
+      return;
+    }
+    if (!isActive) {
+      return;
+    }
+    if (!isConnected) {
+      return;
+    }
+    if (_profileSubs.containsKey(uid)) {
+      return;
+    }
+    _profileSubs[uid] = _profile.stream(uid).listen((v) {
+      mappedProfiles[uid] = v;
+      notify();
+    });
+  }
+
+  void _listenMetadata(String uid, Iterable<String> leaves) {
+    if (uid.isEmpty) {
+      return;
+    }
+    if (!isActive) {
+      return;
+    }
+    if (!isConnected) {
+      return;
+    }
+    void apply(String type) {
+      if (type == 'profile') {
+        if (_profileSubs.containsKey(uid)) {
+          if (leaves.contains(uid)) {
+            _profileSubs[uid]?.cancel();
+          }
+          return;
         }
-        continue;
+        _profileSubs[uid] = _profile.stream(uid).listen((v) {
+          mappedProfiles[uid] = v;
+          notify();
+        });
+      } else if (type == 'status') {
+        if (_statusSubs.containsKey(uid)) {
+          if (leaves.contains(uid)) {
+            _statusSubs[uid]?.cancel();
+          }
+          return;
+        }
+        _statusSubs[uid] = _status.stream(uid).listen((v) {
+          mappedStatuses[uid] = v;
+          notify();
+        });
+      } else if (type == 'typing') {
+        if (_typingSubs.containsKey(uid)) {
+          if (leaves.contains(uid)) {
+            _typingSubs[uid]?.cancel();
+          }
+          return;
+        }
+        _typingSubs[uid] = _typing.stream(uid).listen((v) {
+          mappedTypings[uid] = v;
+          notify();
+        });
       }
-      _statusSubs[uid] = _status.stream(uid).listen((v) {
-        mappedStatuses[uid] = v;
-        notify();
-      });
+    }
+
+    apply('profile');
+    apply('status');
+    apply('typing');
+  }
+
+  void _cancelMetadata(String uid) {
+    _profileSubs[uid]?.cancel();
+    _statusSubs[uid]?.cancel();
+    _typingSubs[uid]?.cancel();
+  }
+
+  void _listenAllMetadata(Iterable<String> actives, Iterable<String> leaves) {
+    if (me.isEmpty) return;
+    if (actives.isEmpty) {
+      _cancelAllMetadata();
+      return;
+    }
+    for (final uid in actives) {
+      _listenMetadata(uid, leaves);
     }
   }
 
-  void _listenTypings(Iterable<String> actives, Iterable<String> leaves) {
-    if (actives.isEmpty) return;
-    for (final uid in actives) {
-      if (uid.isEmpty) {
-        continue;
+  void _cancelAllMetadata() {
+    if (_profileSubs.isNotEmpty) {
+      for (final sub in _profileSubs.values) {
+        sub.cancel();
       }
-      if (!isActive) {
-        continue;
-      }
-      if (!isConnected) {
-        continue;
-      }
-      if (_typingSubs.containsKey(uid)) {
-        if (leaves.contains(uid)) {
-          _typingSubs[uid]?.cancel();
-        }
-        continue;
-      }
-      _typingSubs[uid] = _typing.stream(uid).listen((v) {
-        mappedTypings[uid] = v;
-        notify();
-      });
+      _profileSubs.clear();
     }
-  }
-
-  void _listenProfiles(Iterable<String> participants, Iterable<String> leaves) {
-    final actives = [me, ...participants];
-    if (actives.isEmpty) return;
-    for (final uid in actives) {
-      if (uid.isEmpty) {
-        continue;
+    if (_statusSubs.isNotEmpty) {
+      for (final sub in _statusSubs.values) {
+        sub.cancel();
       }
-      if (!isActive) {
-        continue;
+      _statusSubs.clear();
+    }
+    if (_typingSubs.isNotEmpty) {
+      for (final sub in _typingSubs.values) {
+        sub.cancel();
       }
-      if (!isConnected) {
-        continue;
-      }
-      if (_profileSubs.containsKey(uid)) {
-        if (leaves.contains(uid)) {
-          _profileSubs[uid]?.cancel();
-        }
-        continue;
-      }
-      _profileSubs[uid] = _profile.stream(uid).listen((v) {
-        mappedProfiles[uid] = v;
-        notify();
-      });
+      _typingSubs.clear();
     }
   }
 
@@ -272,11 +307,10 @@ class RoomManager extends BaseNotifier {
         return <String>{};
       }).reduce((a, b) => {...a, ...b});
 
-      final leaves = activeParticipants.where((e) => !actives.contains(e));
-
-      _listenStatuses(actives, leaves);
-      _listenTypings(actives, leaves);
-      _listenProfiles(actives, leaves);
+      _listenAllMetadata(
+        actives,
+        activeParticipants.where((e) => !actives.contains(e)),
+      );
 
       activeParticipants = actives;
 
@@ -285,43 +319,78 @@ class RoomManager extends BaseNotifier {
   }
 
   void _dispose() {
-    // ROOM
     _roomSubscription?.cancel();
-
-    // STATUS
-    for (final sub in _statusSubs.values) {
-      sub.cancel();
-    }
-    _statusSubs.clear();
-
-    // TYPING
-    for (final sub in _typingSubs.values) {
-      sub.cancel();
-    }
-    _typingSubs.clear();
-
-    // USER
-    for (final sub in _profileSubs.values) {
-      sub.cancel();
-    }
-    _profileSubs.clear();
+    _cancelAllMetadata();
+    _disconnectAllManagers();
   }
 
-  Future<T?> open<T extends Object?>(
+  void _disconnectAllManagers() {
+    if (_mappedManagers.isEmpty) return;
+    for (var i in _mappedManagers.values) {
+      i.dispose();
+    }
+    _mappedManagers.clear();
+  }
+
+  ChatManager _manager(Room room) {
+    return _mappedManagers[room.id] ??= ChatManager(room);
+  }
+
+  ChatManager manager(String roomId) {
+    return _mappedManagers[roomId] ??= ChatManager(room(roomId));
+  }
+
+  ChatManager? managerOrNull(String roomId) {
+    return _mappedManagers[roomId];
+  }
+
+  Future<T?> connect<T extends Object?>(
     BuildContext context,
     Room room, {
     ValueChanged<String>? onError,
   }) async {
     try {
-      ChatManager.i.connect(room);
-      final feedback = await uiConfigs.onChatStart.call(context, room);
-      ChatManager.i.disconnect();
+      final manager = _manager(room)..connect();
+      if (room.isLocal) {
+        if (room is DirectRoom) {
+          _listenMetadata(room.friendId, {});
+        } else if (room is GroupRoom) {
+          for (var uid in room.participants) {
+            _listenMetadata(uid, {});
+          }
+        }
+      }
+      final feedback = await uiConfigs.onChatStart(context, manager);
+      manager.disconnect();
+      final closedRoom = this.room(room.id);
+      if (closedRoom.isLocal || closedRoom.isEmpty) {
+        final actives = mappedRooms.values
+            .map((e) => e.participants)
+            .reduce((a, b) => {...a, ...b})
+            .toList();
+        if (room is DirectRoom) {
+          if (!actives.contains(room.friendId)) {
+            _cancelMetadata(room.friendId);
+          }
+        } else if (room is GroupRoom) {
+          for (var uid in room.participants) {
+            if (!actives.contains(uid)) {
+              _cancelMetadata(uid);
+            }
+          }
+        }
+      }
       if (feedback is T) return feedback;
       return null;
     } catch (e) {
       onError?.call(e.toString());
       return null;
     }
+  }
+
+  void disconnect(String roomId) {
+    _mappedManagers[roomId]?.dispose();
+    _mappedManagers.remove(roomId);
   }
 
   @override
@@ -339,6 +408,7 @@ class RoomManager extends BaseNotifier {
   @override
   void run() {
     _listen();
+    _listenMeProfile();
     resetToken();
   }
 
@@ -395,35 +465,41 @@ class RoomManager extends BaseNotifier {
       if (!old.isEmpty) {
         return old;
       }
-      final creates = _n.normalize({
-        RoomKeys.isGroup: false,
-        RoomKeys.id: id,
-        RoomKeys.createdAt: ChatValueTimestamp(),
-        RoomKeys.updatedAt: ChatValueTimestamp(),
-        RoomKeys.createdBy: me,
-        RoomKeys.participants: participants,
-        RoomKeys.extra: extra,
-      }, _n.room);
-      return Room.parse(creates);
+      return Room(
+        isLocal: true,
+        id: id,
+        createdBy: me,
+        participants: participants.toSet(),
+        extra: extra ?? {},
+      );
     } catch (_) {
       return Room.empty();
     }
   }
 
-  Future<Room> createRoom(Room room) async {
+  Future<Room> createOrGetRoom(Room room) async {
     try {
-      final creates = _n.normalize(room.source, _n.room);
-      await _room.create(room.id, creates);
-      for (final i in room.participants) {
-        final profile = mappedProfiles[i];
-        if (profile != null) {
-          final updates = _n.normalize(profile.source, _n.profile);
-          _profile.update(i, updates);
-        }
+      if (!isConnected || !isActive || isPaused) return Room.empty();
+      if (me.isEmpty) return Room.empty();
+      final old = mappedRooms[room.id] ?? await _room.get(room.id);
+      if (!old.isEmpty) {
+        return old;
       }
-      notify();
-    } catch (_) {}
-    return room;
+      final participants = [...room.participants];
+      if (!participants.contains(me)) {
+        participants.add(me);
+      }
+      participants.sort();
+      if (participants.length < 2) return Room.empty();
+      final source = {...room.source};
+      source[RoomKeys.participants] = participants;
+      final creates = _n.normalize(source, _n.room);
+      await _room.create(room.id, creates);
+      resetToken();
+      return room.copyWith(isLocal: false);
+    } catch (_) {
+      return Room.empty();
+    }
   }
 
   Future<Room> createOrGetThread(

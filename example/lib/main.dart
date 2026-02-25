@@ -70,9 +70,8 @@ void main() async {
     notification: ChatNotificationService(),
     normalizer: ChatFieldValueNormalizerService(),
     uiConfigs: ChatUiConfigs(
-      chatAppbarBuilder: (context, profile, status, typings) {
-        return ChattingAppBar(
-            profile: profile, status: status, typings: typings);
+      chatAppbarBuilder: (context, configs) {
+        return ChattingAppBar(configs: configs);
       },
       inputBuilder: (context, configs) {
         return ChattingInput(configs: configs);
@@ -93,38 +92,44 @@ void main() async {
           typings: typings,
         );
       },
-      audioBuilder: (context, msg) {
+      audioBuilder: (context, manager, msg) {
         return ChatMessageBubble(
+          manager: manager,
           message: msg,
           child: ChattingMessageAudio(message: msg),
         );
       },
-      deletedBuilder: (context, msg) {
+      deletedBuilder: (context, manager, msg) {
         return ChatMessageBubble(
+          manager: manager,
           message: msg,
           child: ChattingMessageDeleted(message: msg),
         );
       },
-      imageBuilder: (context, msg) {
+      imageBuilder: (context, manager, msg) {
         return ChatMessageBubble(
+          manager: manager,
           message: msg,
           child: ChattingMessageImage(message: msg),
         );
       },
-      linkBuilder: (context, msg) {
+      linkBuilder: (context, manager, msg) {
         return ChatMessageBubble(
+          manager: manager,
           message: msg,
           child: ChattingMessageLink(message: msg),
         );
       },
-      textBuilder: (context, msg) {
+      textBuilder: (context, manager, msg) {
         return ChatMessageBubble(
+          manager: manager,
           message: msg,
           child: ChattingMessageText(message: msg),
         );
       },
-      videoBuilder: (context, msg) {
+      videoBuilder: (context, manager, msg) {
         return ChatMessageBubble(
+          manager: manager,
           message: msg,
           child: ChattingMessageVideo(message: msg),
         );
@@ -158,10 +163,10 @@ void main() async {
           child: child,
         );
       },
-      onChatStart: (context, room) {
+      onChatStart: (context, manager) {
         return Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => ChatPage()),
+          MaterialPageRoute(builder: (_) => ChatPage(manager: manager)),
         );
       },
       onImageCapture: (context) {

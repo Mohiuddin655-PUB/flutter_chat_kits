@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
-
-import '../managers/chat.dart';
-import '../managers/room.dart';
-import 'chat_board.dart';
-import 'input.dart';
+import 'package:flutter_chat_kits/flutter_chat_kits.dart';
 
 class ChatBody extends StatelessWidget {
-  const ChatBody({super.key});
+  final ChatManager manager;
 
-  void _replyCancel() => ChatManager.i.reply(null);
+  const ChatBody({super.key, required this.manager});
+
+  ChatUiConfigs get i => RoomManager.i.uiConfigs;
+
+  void _replyCancel() => manager.reply(null);
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Expanded(child: ChatBoard()),
+        Expanded(child: ChatBoard(manager: manager)),
         _buildReplyMessagePreview(context),
         _buildInput(),
       ],
@@ -22,33 +22,52 @@ class ChatBody extends StatelessWidget {
   }
 
   Widget _buildInput() {
-    if (ChatManager.i.room.value.isLeaveByMe) {
+    return ListenableBuilder(
+      listenable: manager,
+      builder: (context, child) {
+        if (manager.room.isLeaveByMe) {
+          return _buildLeaveFromRoomMessage(context);
+        }
+        if (manager.room.isBlockByMe) {
+          return _buildBlockedMessage(context);
+        }
+        return ChatInput(manager: manager);
+      },
+    );
+  }
+
+  Widget _buildBlockedMessage(BuildContext context) {
+    if (i.blockedInputBuilder == null) {
       return Container(
         padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Text("You're unable to send message"),
       );
     }
-    if (ChatManager.i.room.value.isBlockByMe) {
+    return i.blockedInputBuilder!(context);
+  }
+
+  Widget _buildLeaveFromRoomMessage(BuildContext context) {
+    if (i.leaveFromRoomBuilder == null) {
       return Container(
         padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: Text("You're unable to send message"),
       );
     }
-    return ChatInput();
+    return i.leaveFromRoomBuilder!(context);
   }
 
   Widget _buildReplyMessagePreview(BuildContext context) {
-    if (RoomManager.i.uiConfigs.replayMessageReplyBuilder == null) {
+    if (i.replayMessageReplyBuilder == null) {
       return SizedBox.shrink();
     }
     return ListenableBuilder(
-      listenable: ChatManager.i,
+      listenable: manager,
       builder: (context, child) {
-        final reply = ChatManager.i.replyMsg;
+        final reply = manager.replyMsg;
         if (reply == null) {
           return SizedBox.shrink();
         }
-        return RoomManager.i.uiConfigs.replayMessageReplyBuilder!(
+        return i.replayMessageReplyBuilder!(
           context,
           reply,
           _replyCancel,

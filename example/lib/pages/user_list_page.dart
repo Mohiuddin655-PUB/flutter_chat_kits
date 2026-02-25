@@ -131,7 +131,7 @@ class UsersListPage extends StatelessWidget {
                     if (context.mounted) {
                       Navigator.pop(context);
                       Navigator.pop(context);
-                      RoomManager.i.open(context, room);
+                      RoomManager.i.connect(context, room);
                     }
                   } catch (e) {
                     if (context.mounted) {

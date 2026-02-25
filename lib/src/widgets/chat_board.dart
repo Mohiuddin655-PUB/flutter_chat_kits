@@ -5,7 +5,14 @@ import '../managers/room.dart';
 import 'messages.dart';
 
 class ChatBoard extends StatefulWidget {
-  const ChatBoard({super.key});
+  final ChatManager manager;
+  final double scrollThreshold;
+
+  const ChatBoard({
+    super.key,
+    required this.manager,
+    this.scrollThreshold = 100,
+  });
 
   @override
   State<ChatBoard> createState() => _ChatBoardState();
@@ -30,8 +37,7 @@ class _ChatBoardState extends State<ChatBoard> {
 
   void _onScroll() {
     if (_scrollController.hasClients) {
-      final atBottom = _scrollController.offset <= 100;
-
+      final atBottom = _scrollController.offset <= widget.scrollThreshold;
       if (_isAtBottom != atBottom) {
         setState(() {
           _isAtBottom = atBottom;
@@ -54,13 +60,17 @@ class _ChatBoardState extends State<ChatBoard> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: ChatManager.i,
+      listenable: widget.manager,
       builder: (context, child) {
-        final messages = ChatManager.i.messages;
+        final messages = widget.manager.messages;
         return Stack(
           fit: StackFit.expand,
           children: [
-            ChatMessages(messages: messages, controller: _scrollController),
+            ChatMessages(
+              manager: widget.manager,
+              messages: messages,
+              controller: _scrollController,
+            ),
             if (_showScrollDownButton) _buildScrollDownButton(context),
           ],
         );
@@ -72,7 +82,7 @@ class _ChatBoardState extends State<ChatBoard> {
     if (RoomManager.i.uiConfigs.scrollDownButtonBuilder == null) {
       return SizedBox.shrink();
     }
-    final unseen = ChatManager.i.unseens;
+    final unseen = widget.manager.unseens;
     return RoomManager.i.uiConfigs.scrollDownButtonBuilder!(
       context,
       unseen,

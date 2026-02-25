@@ -7,6 +7,7 @@ import '../utils/chat_ui.dart';
 import 'message.dart';
 
 class ChatMessages extends StatefulWidget {
+  final ChatManager manager;
   final bool shrinkWrap;
   final ScrollController controller;
   final List<Message> messages;
@@ -14,6 +15,7 @@ class ChatMessages extends StatefulWidget {
 
   const ChatMessages({
     super.key,
+    required this.manager,
     this.shrinkWrap = false,
     required this.controller,
     required this.messages,
@@ -104,6 +106,7 @@ class _ChatMessagesState extends State<ChatMessages> {
       widgets.add(
         ChatMessage(
           key: ValueKey(current.id),
+          manager: widget.manager,
           message: current,
           audioBuilder: config.audioBuilder,
           deletedBuilder: config.deletedBuilder,
@@ -116,12 +119,19 @@ class _ChatMessagesState extends State<ChatMessages> {
 
       if (nDate == null || !_isSameDay(cDate, nDate)) {
         widgets.add(
-          config.groupDateBuilder(context, current.createdAt.timestamp),
+          _buildGroupedText(context, current.createdAt.timestamp),
         );
       }
     }
 
     return widgets;
+  }
+
+  Widget _buildGroupedText(BuildContext context, DateTime date) {
+    if (config.groupDateBuilder == null) {
+      return SizedBox();
+    }
+    return config.groupDateBuilder!(context, date);
   }
 
   Widget _buildNoMessages(BuildContext context) {
@@ -132,7 +142,7 @@ class _ChatMessagesState extends State<ChatMessages> {
   Widget _buildTyping(BuildContext context) {
     if (config.typingBuilder == null) return SizedBox();
     return ValueListenableBuilder(
-      valueListenable: ChatManager.i.typings,
+      valueListenable: widget.manager.typings,
       builder: (context, typings, child) {
         if (typings.isEmpty) return SizedBox.shrink();
         return config.typingBuilder!(context, typings);
@@ -144,12 +154,12 @@ class _ChatMessagesState extends State<ChatMessages> {
     if (config.profileBuilder == null) return SizedBox();
     return ListenableBuilder(
       listenable: Listenable.merge([
-        ChatManager.i.profile,
-        ChatManager.i.status,
+        widget.manager.profile,
+        widget.manager.status,
       ]),
       builder: (context, child) {
-        final profile = ChatManager.i.profile.value;
-        final status = ChatManager.i.status.value;
+        final profile = widget.manager.profile.value;
+        final status = widget.manager.status.value;
         return config.profileBuilder!(context, profile, status);
       },
     );

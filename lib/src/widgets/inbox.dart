@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../managers/room.dart';
+import '../models/profile.dart';
 import '../models/room.dart';
+import '../models/status.dart';
+import '../models/typing.dart';
 import '../utils/chat_ui.dart';
 
 class ChatInbox extends StatefulWidget {
@@ -14,6 +17,8 @@ class ChatInbox extends StatefulWidget {
 }
 
 class _ChatInboxState extends State<ChatInbox> {
+  ChatUiConfigs get i => RoomManager.i.uiConfigs;
+
   void _onChanged(ChatVisibilityInfo info) {
     if (info.visibleFraction <= 0.5) {
       return;
@@ -29,7 +34,10 @@ class _ChatInboxState extends State<ChatInbox> {
 
   @override
   Widget build(BuildContext context) {
-    return RoomManager.i.uiConfigs.visibilityDetectorBuilder(
+    if (i.visibilityDetectorBuilder == null) {
+      return _buildLayout();
+    }
+    return i.visibilityDetectorBuilder!(
       context,
       widget.room.id,
       _buildLayout(),
@@ -46,20 +54,13 @@ class _ChatInboxState extends State<ChatInbox> {
         final status = RoomManager.i.statusFor(friendId);
         final typing = RoomManager.i.typingsFromRoom(room);
         final profile = RoomManager.i.profileFor(friendId);
-        return RoomManager.i.uiConfigs.directInboxBuilder(
-          context,
-          room,
-          profile,
-          status,
-          typing.firstOrNull,
-        );
+        return _buildDirectInbox(room, profile, status, typing.firstOrNull);
 
       case GroupRoom():
         final status = RoomManager.i.statusFromRoom(room);
         final typings = RoomManager.i.typingsFromRoom(room);
         final profile = RoomManager.i.profileFromRoom(room);
-        return RoomManager.i.uiConfigs.groupInboxBuilder(
-          context,
+        return _buildGroupInbox(
           room,
           profile,
           status,
@@ -68,5 +69,41 @@ class _ChatInboxState extends State<ChatInbox> {
       default:
         return SizedBox.shrink();
     }
+  }
+
+  Widget _buildDirectInbox(
+    DirectRoom room,
+    Profile profile,
+    Status status,
+    Typing? typing,
+  ) {
+    if (i.directInboxBuilder == null) {
+      return SizedBox.shrink();
+    }
+    return i.directInboxBuilder!(
+      context,
+      room,
+      profile,
+      status,
+      typing,
+    );
+  }
+
+  Widget _buildGroupInbox(
+    GroupRoom room,
+    Profile profile,
+    Status status,
+    List<Typing> typings,
+  ) {
+    if (i.groupInboxBuilder == null) {
+      return SizedBox.shrink();
+    }
+    return i.groupInboxBuilder!(
+      context,
+      room,
+      profile,
+      status,
+      typings,
+    );
   }
 }

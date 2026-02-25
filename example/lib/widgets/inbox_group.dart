@@ -103,7 +103,7 @@ class ChatInboxGroup extends StatelessWidget {
         _getActiveIndicator(status.lastSeen.timestampOrNull);
 
     return InkWell(
-      onTap: () => RoomManager.i.open(context, room),
+      onTap: () => RoomManager.i.connect(context, room),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(

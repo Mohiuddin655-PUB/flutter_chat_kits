@@ -9,25 +9,30 @@ import 'base.dart';
 import 'room.dart';
 
 class ChatManager extends BaseNotifier {
-  ChatManager._() : super(Duration(minutes: 1), RoomManager.i.connectivity);
+  ChatManager(this.room)
+      : super(Duration(minutes: 1), RoomManager.i.connectivity);
 
-  static ChatManager? _i;
+  late Room room;
+  late final profile = ValueNotifier(RoomManager.i.profileFromRoom(room));
+  late final status = ValueNotifier(RoomManager.i.statusFromRoom(room));
+  late final typings = ValueNotifier(RoomManager.i.typingsFromRoom(room));
 
-  static ChatManager get i => _i ??= ChatManager._();
+  factory ChatManager.of(String roomId) {
+    return RoomManager.i.manager(roomId);
+  }
 
-  final room = ValueNotifier(Room.empty());
+  static ChatManager? ofOrNull(String roomId) {
+    return RoomManager.i.managerOrNull(roomId);
+  }
 
-  late final profile = ValueNotifier(RoomManager.i.profileFromRoom(room.value));
-  late final status = ValueNotifier(RoomManager.i.statusFromRoom(room.value));
-  late final typings = ValueNotifier(RoomManager.i.typingsFromRoom(room.value));
-
+  bool _attached = false;
   bool loading = true;
   Map<String, Message> mappedMessages = {};
 
+  String get roomId => room.id;
+
   @override
   String get me => RoomManager.i.me;
-
-  String get roomId => room.value.id;
 
   List<Message> get messages => mappedMessages.values.toList();
 
@@ -66,13 +71,13 @@ class ChatManager extends BaseNotifier {
 
   @override
   void dispose() {
-    stop();
-    RoomManager.i.removeListener(_latest);
+    disconnect();
     super.dispose();
   }
 
-  void connect(Room room) {
-    this.room.value = room;
+  void connect() {
+    if (_attached) return;
+    _attached = true;
     mappedMessages = {};
     RoomManager.i.addListener(_latest);
     run();
@@ -85,13 +90,16 @@ class ChatManager extends BaseNotifier {
   }
 
   void disconnect() {
+    if (!_attached) return;
+    _attached = false;
     stop();
     RoomManager.i.markAsActive(null);
+    RoomManager.i.removeListener(_latest);
   }
 
   void _latest() {
     final r = RoomManager.i.room(roomId);
-    room.value = r;
+    room = r;
     profile.value = RoomManager.i.profileFromRoom(r);
     status.value = RoomManager.i.statusFromRoom(r);
     typings.value = RoomManager.i.typingsFromRoom(r);
@@ -146,7 +154,7 @@ class ChatManager extends BaseNotifier {
   }
 
   void reply(Message? message) {
-    if (room.value.isDisabledToSend) return;
+    if (room.isDisabledToSend) return;
     replyMsg = message;
     notifyListeners();
   }
@@ -199,7 +207,7 @@ class ChatManager extends BaseNotifier {
       msg.id,
       {MessageKeys.isDeleted: true},
       roomValues: {
-        if (room.value.lastMessageId == msg.id) ...{
+        if (room.lastMessageId == msg.id) ...{
           RoomKeys.lastMessage: msg.lastMessage(deleted: true),
           RoomKeys.lastMessageSenderId: me,
           RoomKeys.lastMessageDeleted: true,
@@ -253,7 +261,7 @@ class ChatManager extends BaseNotifier {
   void remove(Message msg) async {
     if (!msg.isRemovable) return;
     pop(msg);
-    final participants = room.value.participants.map((e) {
+    final participants = room.participants.map((e) {
       if (e == me) return true;
       if (msg.statuses.containsKey(e)) {
         return msg.removes[e] ?? false;
@@ -274,12 +282,13 @@ class ChatManager extends BaseNotifier {
   }
 
   void send(Message message) async {
-    if (mappedMessages.isEmpty) {
-      final status = await RoomManager.i.createRoom(room.value);
-      if (status.isEmpty) {
-        pop(message);
+    if (room.isLocal) {
+      final global = await RoomManager.i.createOrGetRoom(room);
+      if (global.isEmpty) {
         return;
       }
+      room = global;
+      notify();
     }
     put(message);
     RoomManager.i.createMessage(message).then((v) {
@@ -314,7 +323,7 @@ class ChatManager extends BaseNotifier {
         MessageKeys.editedAt: ChatValueTimestamp(),
       },
       roomValues: {
-        if (room.value.lastMessageId == msg.id) ...{
+        if (room.lastMessageId == msg.id) ...{
           RoomKeys.lastMessage: updatedMsg.lastMessage(),
         },
       },
