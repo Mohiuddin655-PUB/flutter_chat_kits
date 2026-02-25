@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.3] - 2026-02-25
+
+- Enhance ChatManager
+
 ## [1.0.2] - 2026-02-11
 
 - Enhance room and profile
