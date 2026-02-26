@@ -612,6 +612,23 @@ class RoomManager extends BaseNotifier {
     } catch (_) {}
   }
 
+  Future<void> sayHello(
+    String friendId,
+    Message Function(String roomId) message, {
+    BuildContext? roomOpeningContext,
+  }) async {
+    try {
+      final room = await createOrGetThread([friendId]);
+      if (room.isEmpty) return;
+      final manager = _manager(room)..send(message(room.id));
+      if (roomOpeningContext != null && roomOpeningContext.mounted) {
+        manager.connect();
+        await uiConfigs.onChatStart(roomOpeningContext, manager);
+        manager.disconnect();
+      }
+    } catch (_) {}
+  }
+
   Future<void> markAsActive(String? roomId) async {
     if (me.isEmpty) return;
     final normalized = _n.normalize({

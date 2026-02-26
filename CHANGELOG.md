@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.6] - 2026-02-26
+
+- Add sayHello to send message initially without room
+
 ## [1.0.5] - 2026-02-26
 
 - Delete room with related metadata
