@@ -22,8 +22,13 @@ class ChatRoomService extends ChatRoomDelegate {
   }
 
   @override
-  Future<void> update(String roomId, Map<String, dynamic> value) async {
+  Future<void> update(String roomId, Map<String, dynamic> value) {
     return _ref.doc(roomId).update(value);
+  }
+
+  @override
+  Future<void> delete(String roomId) {
+    return _ref.doc(roomId).delete();
   }
 
   @override

@@ -437,6 +437,11 @@ class RoomManager extends BaseNotifier {
     return _n.timestamp(raw);
   }
 
+  void pop(String roomId) {
+    mappedRooms.remove(roomId);
+    notifyListeners();
+  }
+
   void put(Room room) {
     mappedRooms[room.id] = room;
     notifyListeners();
@@ -665,6 +670,19 @@ class RoomManager extends BaseNotifier {
     } catch (_) {}
   }
 
+  Future<void> delete(String roomId) async {
+    final room = this.room(roomId);
+    try {
+      pop(room.id);
+      await _room.delete(roomId);
+    } catch (_) {
+      put(room);
+    }
+    try {
+      await _message.deleteAll(roomId);
+    } catch (_) {}
+  }
+
   Future<void> block(Room room, Iterable<String> participants) async {
     if (me.isEmpty) return;
     put(room.copyWith(blocks: {...room.blocks, ...participants}));
@@ -718,6 +736,14 @@ class RoomManager extends BaseNotifier {
     } catch (_) {
       put(room);
     }
+  }
+
+  void togglePin(Room room) {
+    if (room.isPinnedByMe) {
+      unpin(room);
+      return;
+    }
+    return pin(room);
   }
 
   Future<void> addParticipants(String roomId, List<String> uids) async {
@@ -997,9 +1023,19 @@ class RoomManager extends BaseNotifier {
   Future<Message> createMessage(Message msg) async {
     if (me.isEmpty) return msg.copyWith(status: MessageStatus.failed);
     if (msg.isEmpty) return msg.copyWith(status: MessageStatus.failed);
+    final body = msg.lastMessage();
+    final room = this.room(msg.roomId);
     try {
+      put(room.copyWith(
+        lastMessage: body,
+        lastMessageId: msg.id,
+        lastMessageSenderId: me,
+        lastMessageDeleted: false,
+        updatedAt: ChatValueTimestamp.now(),
+      ));
       final replacedMsg = await _replace(msg);
       if (replacedMsg.isEmpty) {
+        put(room);
         return msg.copyWith(status: MessageStatus.failed);
       }
       final normalized = _n.normalize(
@@ -1007,8 +1043,6 @@ class RoomManager extends BaseNotifier {
         _n.message,
       );
       await _message.create(msg.roomId, msg.id, normalized);
-      final room = this.room(msg.roomId);
-      final body = msg.lastMessage();
       final normalizedRoom = _n.normalize({
         RoomKeys.lastMessage: body,
         RoomKeys.lastMessageId: msg.id,
@@ -1034,6 +1068,7 @@ class RoomManager extends BaseNotifier {
       await sendNotification(msg);
       return replacedMsg.copyWith(status: MessageStatus.sent);
     } catch (_) {
+      put(room);
       return msg.copyWith(status: MessageStatus.failed);
     }
   }
@@ -1041,6 +1076,7 @@ class RoomManager extends BaseNotifier {
   Future<bool> deleteMessage(
     Message msg, {
     bool deleteBothAsSync = false,
+    bool deleteMetaFromRoom = false,
   }) async {
     if (me.isEmpty) return false;
     try {

@@ -41,6 +41,13 @@ class ChatMessageService extends ChatMessageDelegate {
   }
 
   @override
+  Future<void> deleteAll(String roomId) {
+    return _ref.doc(roomId).collection(kChatMessagesPath).get().then((v) {
+      return v.docs.map((e) => Message.parse(e.data()));
+    }).then(deletes);
+  }
+
+  @override
   Future<void> update(
     String roomId,
     String id,

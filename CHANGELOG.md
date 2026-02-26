@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.5] - 2026-02-26
+
+- Delete room with related metadata
+
 ## [1.0.4] - 2026-02-25
 
 - Add Block and Pin feature in room

@@ -44,6 +44,8 @@ abstract class ChatMessageDelegate {
 
   Future<void> deletes(Iterable<Message> messages);
 
+  Future<void> deleteAll(String roomId);
+
   Future<void> update(String roomId, String id, Map<String, dynamic> value);
 
   Future<void> updates(String roomId, Map<String, Map<String, dynamic>> values);
