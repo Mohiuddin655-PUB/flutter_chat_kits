@@ -258,7 +258,7 @@ class ChatManager extends BaseNotifier {
   }
 
   void remove(Message msg) async {
-    if (!msg.isRemovable) return;
+    if (!msg.shouldRemove) return;
     pop(msg);
     final participants = room.participants.map((e) {
       if (e == me) return true;
