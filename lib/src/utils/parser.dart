@@ -26,4 +26,9 @@ extension ChatListParser on Iterable {
     }).whereType<E>();
     return entries;
   }
+
+  Iterable<String> get parsedStrings {
+    if (isEmpty) return {};
+    return parse(parser: (e) => e.toString(), check: (e) => e.isNotEmpty);
+  }
 }

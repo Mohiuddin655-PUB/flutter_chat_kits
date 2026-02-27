@@ -8,18 +8,20 @@ import 'message.dart';
 
 class ChatMessages extends StatefulWidget {
   final ChatManager manager;
-  final bool shrinkWrap;
-  final ScrollController controller;
   final List<Message> messages;
-  final EdgeInsets padding;
+  final ScrollController controller;
+  final double? scrollToBottomThreshold;
+  final EdgeInsets? padding;
+  final ValueChanged<bool>? onHasNewMessage;
 
   const ChatMessages({
     super.key,
     required this.manager,
-    this.shrinkWrap = false,
     required this.controller,
     required this.messages,
-    this.padding = const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+    this.scrollToBottomThreshold,
+    this.padding,
+    this.onHasNewMessage,
   });
 
   @override
@@ -53,16 +55,21 @@ class _ChatMessagesState extends State<ChatMessages> {
 
   void _onScroll() {
     if (!widget.controller.hasClients) return;
-
-    final atBottom = widget.controller.offset <= 100;
+    final atBottom =
+        widget.controller.offset <= (widget.scrollToBottomThreshold ?? 100);
     if (_isAtBottom != atBottom) {
       setState(() => _isAtBottom = atBottom);
+      widget.onHasNewMessage?.call(!atBottom);
     }
   }
 
   @override
   void didUpdateWidget(ChatMessages oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_onScroll);
+      widget.controller.addListener(_onScroll);
+    }
     if (widget.messages.length > _previousMessageCount && _isAtBottom) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (widget.controller.hasClients) {
@@ -79,12 +86,9 @@ class _ChatMessagesState extends State<ChatMessages> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      reverse: true,
-      shrinkWrap: widget.shrinkWrap,
-      controller: widget.controller,
-      padding: widget.padding,
-      children: [
+    return _buildLayout(
+      context,
+      [
         _buildTyping(context),
         if (widget.messages.isEmpty)
           _buildNoMessages(context)
@@ -93,6 +97,18 @@ class _ChatMessagesState extends State<ChatMessages> {
         _buildProfile(context),
       ],
     );
+  }
+
+  Widget _buildLayout(BuildContext context, List<Widget> children) {
+    if (config.messagesBuilder == null) {
+      return ListView(
+        reverse: true,
+        controller: widget.controller,
+        padding: widget.padding,
+        children: children,
+      );
+    }
+    return config.messagesBuilder!(context, widget.controller, children);
   }
 
   List<Widget> _buildMessages(BuildContext context, List<Message> messages) {
@@ -129,29 +145,29 @@ class _ChatMessagesState extends State<ChatMessages> {
 
   Widget _buildGroupedText(BuildContext context, DateTime date) {
     if (config.groupDateBuilder == null) {
-      return SizedBox();
+      return const SizedBox.shrink();
     }
     return config.groupDateBuilder!(context, date);
   }
 
   Widget _buildNoMessages(BuildContext context) {
-    if (config.noMessagesBuilder == null) return SizedBox();
+    if (config.noMessagesBuilder == null) return const SizedBox.shrink();
     return config.noMessagesBuilder!(context);
   }
 
   Widget _buildTyping(BuildContext context) {
-    if (config.typingBuilder == null) return SizedBox();
+    if (config.typingBuilder == null) return const SizedBox.shrink();
     return ValueListenableBuilder(
       valueListenable: widget.manager.typings,
       builder: (context, typings, child) {
-        if (typings.isEmpty) return SizedBox.shrink();
+        if (typings.isEmpty) return const SizedBox.shrink();
         return config.typingBuilder!(context, typings);
       },
     );
   }
 
   Widget _buildProfile(BuildContext context) {
-    if (config.profileBuilder == null) return SizedBox();
+    if (config.profileBuilder == null) return const SizedBox.shrink();
     return ListenableBuilder(
       listenable: Listenable.merge([
         widget.manager.profile,

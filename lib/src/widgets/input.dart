@@ -9,15 +9,20 @@ import '../utils/chat_ui.dart';
 
 class ChatInput extends StatefulWidget {
   final ChatManager manager;
+  final TextEditingController? controller;
 
-  const ChatInput({super.key, required this.manager});
+  const ChatInput({
+    super.key,
+    required this.manager,
+    this.controller,
+  });
 
   @override
   State<ChatInput> createState() => _ChatInputState();
 }
 
 class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
-  final _controller = TextEditingController();
+  late TextEditingController _controller;
   Timer? _typingTimer;
   bool _isTyping = false;
 
@@ -27,13 +32,25 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _controller = widget.controller ?? TextEditingController();
     _controller.addListener(_onTextChanged);
+  }
+
+  @override
+  void didUpdateWidget(covariant ChatInput oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      _controller.removeListener(_onTextChanged);
+      if (oldWidget.controller == null) _controller.dispose();
+      _controller = widget.controller ?? TextEditingController();
+      _controller.addListener(_onTextChanged);
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _controller.dispose();
+    if (widget.controller == null) _controller.dispose();
     _typingTimer?.cancel();
     super.dispose();
   }
@@ -49,7 +66,16 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
   }
 
   void _onTextChanged() {
-    if (_controller.text.isNotEmpty && !_isTyping) {
+    if (_controller.text.isEmpty) {
+      _typingTimer?.cancel();
+      if (_isTyping) {
+        _isTyping = false;
+        widget.manager.typing(false);
+      }
+      return;
+    }
+
+    if (!_isTyping) {
       _isTyping = true;
       widget.manager.typing(true);
     }
@@ -89,6 +115,7 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
       paths: images,
       caption: text.isEmpty ? null : text,
     ));
+    if (text.isNotEmpty) _controller.clear();
   }
 
   Future<void> _sendCapturedImage() async {
@@ -103,6 +130,7 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
         caption: text.isEmpty ? null : text,
       ),
     );
+    if (text.isNotEmpty) _controller.clear();
   }
 
   Future<void> _sendVoice(String path, int duration) async {
@@ -133,6 +161,7 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
         caption: text.isEmpty ? null : text,
       ),
     );
+    if (text.isNotEmpty) _controller.clear();
   }
 
   Future<void> _sendVideo() async {
@@ -155,12 +184,13 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
         caption: text.isEmpty ? null : text,
       ),
     );
+    if (text.isNotEmpty) _controller.clear();
   }
 
   @override
   Widget build(BuildContext context) {
     if (i.inputBuilder == null) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
     return i.inputBuilder!(
       context,

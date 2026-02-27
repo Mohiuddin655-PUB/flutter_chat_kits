@@ -11,6 +11,10 @@ typedef ChatAppbarBuilder<T extends Typing> = Widget Function(
   BuildContext context,
   ChatAppbarConfigs,
 );
+typedef ChatBottomBarBuilder = Widget Function(
+  BuildContext context,
+  List<Widget> children,
+);
 typedef ChatVisibilityBuilder = Widget Function(
   BuildContext context,
   String id,
@@ -36,6 +40,8 @@ typedef ChatTypingBuilder<T extends Typing> = Widget Function(
     BuildContext context, List<T> typings);
 typedef ChatProfileBuilder<T extends Profile> = Widget Function(
     BuildContext context, T profile, Status status);
+typedef ChatMessagesBuilder = Widget Function(
+    BuildContext context, ScrollController controller, List<Widget> children);
 typedef ChatGroupDateBuilder = Widget Function(
     BuildContext context, DateTime date);
 typedef ChattingPageCallback<T extends Object?> = Future<T?> Function(
@@ -101,6 +107,7 @@ class ChatInputConfigs {
 
 class ChatUiConfigs {
   final ChatAppbarBuilder<Typing>? chatAppbarBuilder;
+  final ChatBottomBarBuilder? chatBottomBarBuilder;
   final ChatInboxBuilder<DirectRoom, Typing?>? directInboxBuilder;
   final ChatInboxBuilder<GroupRoom, List<Typing>>? groupInboxBuilder;
   final ChatMessageBuilder<AudioMessage>? audioBuilder;
@@ -109,6 +116,7 @@ class ChatUiConfigs {
   final ChatMessageBuilder<LinkMessage>? linkBuilder;
   final ChatMessageBuilder<TextMessage>? textBuilder;
   final ChatMessageBuilder<VideoMessage>? videoBuilder;
+  final ChatMessagesBuilder? messagesBuilder;
   final ChatGroupDateBuilder? groupDateBuilder;
   final ChatProfileBuilder<Profile>? profileBuilder;
   final ChatTypingBuilder<Typing>? typingBuilder;
@@ -131,7 +139,9 @@ class ChatUiConfigs {
   const ChatUiConfigs({
     required this.onChatStart,
     this.chatAppbarBuilder,
+    this.chatBottomBarBuilder,
     this.directInboxBuilder,
+    this.messagesBuilder,
     this.groupInboxBuilder,
     this.audioBuilder,
     this.deletedBuilder,

@@ -6,12 +6,20 @@ import 'messages.dart';
 
 class ChatBoard extends StatefulWidget {
   final ChatManager manager;
-  final double scrollThreshold;
+  final double? scrollToBottomThreshold;
+  final Curve? scrollToBottomAnimationCurve;
+  final Duration? scrollToBottomAnimationDuration;
+  final ScrollController? controller;
+  final EdgeInsets? padding;
 
   const ChatBoard({
     super.key,
     required this.manager,
-    this.scrollThreshold = 100,
+    this.scrollToBottomThreshold,
+    this.scrollToBottomAnimationCurve,
+    this.scrollToBottomAnimationDuration,
+    this.controller,
+    this.padding,
   });
 
   @override
@@ -19,42 +27,38 @@ class ChatBoard extends StatefulWidget {
 }
 
 class _ChatBoardState extends State<ChatBoard> {
-  final ScrollController _scrollController = ScrollController();
-  bool _isAtBottom = true;
+  late ScrollController _scrollController;
   bool _showScrollDownButton = false;
 
   @override
   void initState() {
+    _scrollController = widget.controller ?? ScrollController();
     super.initState();
-    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void didUpdateWidget(covariant ChatBoard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      if (oldWidget.controller == null) _scrollController.dispose();
+      _scrollController = widget.controller ?? ScrollController();
+    }
   }
 
   @override
   void dispose() {
-    _scrollController.dispose();
+    if (widget.controller == null) _scrollController.dispose();
     super.dispose();
   }
 
-  void _onScroll() {
-    if (_scrollController.hasClients) {
-      final atBottom = _scrollController.offset <= widget.scrollThreshold;
-      if (_isAtBottom != atBottom) {
-        setState(() {
-          _isAtBottom = atBottom;
-          _showScrollDownButton = !atBottom;
-        });
-      }
-    }
-  }
-
   void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        0,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    }
+    if (!_scrollController.hasClients) return;
+    _scrollController.animateTo(
+      0,
+      duration: widget.scrollToBottomAnimationDuration ??
+          const Duration(milliseconds: 300),
+      curve: widget.scrollToBottomAnimationCurve ?? Curves.easeOut,
+    );
   }
 
   @override
@@ -70,6 +74,13 @@ class _ChatBoardState extends State<ChatBoard> {
               manager: widget.manager,
               messages: messages,
               controller: _scrollController,
+              padding: widget.padding,
+              scrollToBottomThreshold: widget.scrollToBottomThreshold,
+              onHasNewMessage: (v) {
+                setState(() {
+                  _showScrollDownButton = v;
+                });
+              },
             ),
             if (_showScrollDownButton) _buildScrollDownButton(context),
           ],
@@ -80,7 +91,7 @@ class _ChatBoardState extends State<ChatBoard> {
 
   Widget _buildScrollDownButton(BuildContext context) {
     if (RoomManager.i.uiConfigs.scrollDownButtonBuilder == null) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
     final unseen = widget.manager.unseens;
     return RoomManager.i.uiConfigs.scrollDownButtonBuilder!(

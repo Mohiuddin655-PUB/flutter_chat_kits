@@ -16,7 +16,9 @@ class ChatAppbar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (RoomManager.i.uiConfigs.chatAppbarBuilder == null) return SizedBox();
+    if (RoomManager.i.uiConfigs.chatAppbarBuilder == null) {
+      return const SizedBox.shrink();
+    }
     return ListenableBuilder(
       listenable: Listenable.merge([
         manager.profile,
@@ -41,5 +43,7 @@ class ChatAppbar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(height);
+  Size get preferredSize => RoomManager.i.uiConfigs.chatAppbarBuilder == null
+      ? Size.zero
+      : Size.fromHeight(height);
 }

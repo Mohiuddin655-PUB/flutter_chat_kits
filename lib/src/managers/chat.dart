@@ -154,7 +154,6 @@ class ChatManager extends BaseNotifier {
   }
 
   void reply(Message? message) {
-    if (room.isDisabledToSend) return;
     replyMsg = message;
     notifyListeners();
   }

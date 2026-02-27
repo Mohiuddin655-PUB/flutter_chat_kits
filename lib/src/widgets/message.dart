@@ -43,9 +43,17 @@ class _ChatMessageState extends State<ChatMessage> {
   }
 
   @override
+  void didUpdateWidget(covariant ChatMessage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.message.id != widget.message.id) {
+      _hasMarkedSeen = false;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (widget.message.isRemovedByMe) {
-      return SizedBox();
+      return const SizedBox.shrink();
     }
     if (RoomManager.i.uiConfigs.visibilityDetectorBuilder == null) {
       return _buildLayout(context);
@@ -75,48 +83,48 @@ class _ChatMessageState extends State<ChatMessage> {
       case VideoMessage():
         return _buildVideoMessage(context, msg);
       default:
-        return SizedBox.shrink();
+        return const SizedBox.shrink();
     }
   }
 
   Widget _buildAudioMessage(BuildContext context, AudioMessage msg) {
     if (widget.audioBuilder == null) {
-      return SizedBox();
+      return const SizedBox.shrink();
     }
     return widget.audioBuilder!(context, widget.manager, msg);
   }
 
   Widget _buildDeletedMessage(BuildContext context, Message msg) {
     if (widget.deletedBuilder == null) {
-      return SizedBox();
+      return const SizedBox.shrink();
     }
     return widget.deletedBuilder!(context, widget.manager, msg);
   }
 
   Widget _buildImageMessage(BuildContext context, ImageMessage msg) {
     if (widget.imageBuilder == null) {
-      return SizedBox();
+      return const SizedBox.shrink();
     }
     return widget.imageBuilder!(context, widget.manager, msg);
   }
 
   Widget _buildLinkMessage(BuildContext context, LinkMessage msg) {
     if (widget.linkBuilder == null) {
-      return SizedBox();
+      return const SizedBox.shrink();
     }
     return widget.linkBuilder!(context, widget.manager, msg);
   }
 
   Widget _buildTextMessage(BuildContext context, TextMessage msg) {
     if (widget.textBuilder == null) {
-      return SizedBox();
+      return const SizedBox.shrink();
     }
     return widget.textBuilder!(context, widget.manager, msg);
   }
 
   Widget _buildVideoMessage(BuildContext context, VideoMessage msg) {
     if (widget.videoBuilder == null) {
-      return SizedBox();
+      return const SizedBox.shrink();
     }
     return widget.videoBuilder!(context, widget.manager, msg);
   }

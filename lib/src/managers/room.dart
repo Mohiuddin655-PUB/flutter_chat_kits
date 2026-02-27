@@ -612,6 +612,19 @@ class RoomManager extends BaseNotifier {
     } catch (_) {}
   }
 
+  Future<void> delete(String roomId) async {
+    final room = this.room(roomId);
+    try {
+      pop(room.id);
+      await _room.delete(roomId);
+    } catch (_) {
+      put(room);
+    }
+    try {
+      await _message.deleteAll(roomId);
+    } catch (_) {}
+  }
+
   Future<void> sayHello(
     String friendId,
     Message Function(String roomId) message, {
@@ -629,6 +642,10 @@ class RoomManager extends BaseNotifier {
     } catch (_) {}
   }
 
+  /// --------------------------------------------------------------------------
+  /// PROFILE CALLBACKS
+  /// --------------------------------------------------------------------------
+
   Future<void> markAsActive(String? roomId) async {
     if (me.isEmpty) return;
     final normalized = _n.normalize({
@@ -636,6 +653,10 @@ class RoomManager extends BaseNotifier {
     }, _n.profile);
     return _profile.update(me, normalized);
   }
+
+  /// --------------------------------------------------------------------------
+  /// STATUS CALLBACKS
+  /// --------------------------------------------------------------------------
 
   Future<void> markAsOnline(bool status) async {
     if (me.isEmpty) return;
@@ -652,6 +673,10 @@ class RoomManager extends BaseNotifier {
     } catch (_) {}
   }
 
+  /// --------------------------------------------------------------------------
+  /// TYPING CALLBACKS
+  /// --------------------------------------------------------------------------
+
   Future<void> markAsTyping(String roomId, bool status) async {
     if (me.isEmpty) return;
     try {
@@ -663,46 +688,78 @@ class RoomManager extends BaseNotifier {
     } catch (_) {}
   }
 
-  Future<void> join(String roomId) async {
+  /// --------------------------------------------------------------------------
+  /// ROOM METADATA
+  /// --------------------------------------------------------------------------
+
+  Future<void> addParticipants(Room room, Iterable<String> participants) async {
     if (me.isEmpty) return;
+    final filtered = participants.where((e) {
+      return !room.participants.contains(e);
+    }).toSet();
+    if (filtered.isEmpty) return;
+    put(room.copyWith(participants: filtered, isAddMember: true));
     try {
       final value = _n.normalize({
-        RoomKeys.participants: ChatValueAdd([me]),
+        RoomKeys.leaves: ChatValueRemove([...filtered]),
+        RoomKeys.participants: ChatValueAdd([...filtered]),
       }, _n.room);
-      await _room.update(roomId, value);
-    } catch (_) {}
-  }
-
-  Future<void> leave(String roomId) async {
-    if (me.isEmpty) return;
-    try {
-      final room = this.room(roomId);
-      final value = _n.normalize({
-        if (room.isAdminByMe) RoomKeys.isDeleted: true,
-        RoomKeys.participants: ChatValueRemove([me]),
-        RoomKeys.leaves: ChatValueAdd([me]),
-      }, _n.room);
-      await _room.update(roomId, value);
-      notify();
-    } catch (_) {}
-  }
-
-  Future<void> delete(String roomId) async {
-    final room = this.room(roomId);
-    try {
-      pop(room.id);
-      await _room.delete(roomId);
+      await _room.update(room.id, value);
     } catch (_) {
       put(room);
     }
+  }
+
+  Future<void> removeParticipants(
+    Room room,
+    Iterable<String> participants,
+  ) async {
+    if (me.isEmpty) return;
+    final filtered = participants.where(room.participants.contains).toSet();
+    if (filtered.isEmpty) return;
+    put(room.copyWith(participants: filtered, isAddMember: false));
     try {
-      await _message.deleteAll(roomId);
-    } catch (_) {}
+      final value = _n.normalize({
+        RoomKeys.leaves: ChatValueAdd([...filtered]),
+        RoomKeys.participants: ChatValueRemove([...filtered]),
+      }, _n.room);
+      await _room.update(room.id, value);
+    } catch (_) {
+      put(room);
+    }
+  }
+
+  Future<void> archive(Room room) async {
+    if (me.isEmpty) return;
+    if (room.isArchivedByMe) return;
+    put(room.copyWith(isArchived: true));
+    try {
+      final value = _n.normalize({
+        RoomKeys.archives: ChatValueAdd([me]),
+      }, _n.room);
+      await _room.update(room.id, value);
+    } catch (_) {
+      put(room);
+    }
+  }
+
+  Future<void> unarchive(Room room) async {
+    if (me.isEmpty) return;
+    if (!room.isArchivedByMe) return;
+    put(room.copyWith(isArchived: false));
+    try {
+      final value = _n.normalize({
+        RoomKeys.archives: ChatValueRemove([me]),
+      }, _n.room);
+      await _room.update(room.id, value);
+    } catch (_) {
+      put(room);
+    }
   }
 
   Future<void> block(Room room, Iterable<String> participants) async {
     if (me.isEmpty) return;
-    put(room.copyWith(blocks: {...room.blocks, ...participants}));
+    put(room.copyWith(blocks: participants, isBlocked: true));
     try {
       final value = _n.normalize({
         RoomKeys.blocks: ChatValueAdd([...participants]),
@@ -715,8 +772,7 @@ class RoomManager extends BaseNotifier {
 
   Future<void> unblock(Room room, Iterable<String> participants) async {
     if (me.isEmpty) return;
-    final blocks = room.blocks..removeAll(participants);
-    put(room.copyWith(blocks: blocks));
+    put(room.copyWith(blocks: participants, isBlocked: false));
     try {
       final value = _n.normalize({
         RoomKeys.blocks: ChatValueRemove([...participants]),
@@ -727,13 +783,112 @@ class RoomManager extends BaseNotifier {
     }
   }
 
-  void pin(Room room) async {
+  Future<void> join(Room room) async {
+    if (me.isEmpty) return;
+    put(room.copyWith(isLeaved: false));
+    try {
+      final value = _n.normalize({
+        if (room.isAdminByMe) RoomKeys.isDeleted: ChatValueDelete(),
+        RoomKeys.leaves: ChatValueRemove([me]),
+        RoomKeys.participants: ChatValueAdd([me]),
+      }, _n.room);
+      await _room.update(room.id, value);
+    } catch (_) {
+      pop(room.id);
+    }
+  }
+
+  Future<void> leave(Room room) async {
+    if (me.isEmpty) return;
+    if (room.isLeaveByMe) return;
+    pop(room.id);
+    try {
+      final value = _n.normalize({
+        if (room.isAdminByMe) RoomKeys.isDeleted: true,
+        RoomKeys.leaves: ChatValueAdd([me]),
+        RoomKeys.participants: ChatValueRemove([me]),
+      }, _n.room);
+      await _room.update(room.id, value);
+    } catch (_) {
+      put(room);
+    }
+  }
+
+  Future<void> mute(Room room) async {
+    if (me.isEmpty) return;
+    if (room.isMutedByMe) return;
+    put(room.copyWith(isMuted: true));
+    try {
+      final value = _n.normalize({
+        RoomKeys.mutes: ChatValueAdd([me]),
+      }, _n.room);
+      await _room.update(room.id, value);
+    } catch (_) {
+      put(room);
+    }
+  }
+
+  Future<void> unmute(Room room) async {
+    if (me.isEmpty) return;
+    if (!room.isPinnedByMe) return;
+    put(room.copyWith(isMuted: false));
+    try {
+      final value = _n.normalize({
+        RoomKeys.mutes: ChatValueRemove([me]),
+      }, _n.room);
+      await _room.update(room.id, value);
+    } catch (_) {
+      put(room);
+    }
+  }
+
+  Future<void> remove(Room room) async {
+    if (me.isEmpty) return;
+    if (room.isRemovedByMe) return;
+    pop(room.id);
+    try {
+      final value = _n.normalize({
+        "${RoomKeys.removes}.$me": room.lastMessageId,
+      }, _n.room);
+      await _room.update(room.id, value);
+    } catch (_) {
+      put(room);
+    }
+  }
+
+  Future<void> restrict(Room room, Iterable<String> participants) async {
+    if (me.isEmpty) return;
+    put(room.copyWith(restricts: participants, isRestricted: true));
+    try {
+      final value = _n.normalize({
+        RoomKeys.restricts: ChatValueAdd([...participants]),
+      }, _n.room);
+      await _room.update(room.id, value);
+    } catch (_) {
+      put(room);
+    }
+  }
+
+  Future<void> unrestrict(Room room, Iterable<String> participants) async {
+    if (me.isEmpty) return;
+    put(room.copyWith(restricts: participants, isRestricted: false));
+    try {
+      final value = _n.normalize({
+        RoomKeys.restricts: ChatValueRemove([...participants]),
+      }, _n.room);
+      await _room.update(room.id, value);
+    } catch (_) {
+      put(room);
+    }
+  }
+
+  Future<void> pin(Room room) async {
     if (me.isEmpty) return;
     if (room.isPinnedByMe) return;
     put(room.copyWith(isPinned: true));
     try {
       final value = _n.normalize({
-        "${RoomKeys.pins}.$me": true,
+        RoomKeys.pins: ChatValueAdd([me]),
       }, _n.room);
       await _room.update(room.id, value);
     } catch (_) {
@@ -741,58 +896,18 @@ class RoomManager extends BaseNotifier {
     }
   }
 
-  void unpin(Room room) async {
+  Future<void> unpin(Room room) async {
     if (me.isEmpty) return;
     if (!room.isPinnedByMe) return;
     put(room.copyWith(isPinned: false));
     try {
       final value = _n.normalize({
-        "${RoomKeys.pins}.$me": ChatValueDelete(),
+        RoomKeys.pins: ChatValueRemove([me]),
       }, _n.room);
       await _room.update(room.id, value);
     } catch (_) {
       put(room);
     }
-  }
-
-  void togglePin(Room room) {
-    if (room.isPinnedByMe) {
-      unpin(room);
-      return;
-    }
-    return pin(room);
-  }
-
-  Future<void> addParticipants(String roomId, List<String> uids) async {
-    if (me.isEmpty) return;
-    try {
-      final value = _n.normalize({
-        RoomKeys.participants: ChatValueAdd(uids.toSet().toList()),
-      }, _n.room);
-      await _room.update(roomId, value);
-    } catch (_) {}
-  }
-
-  Future<void> removeParticipants(String roomId, List<String> uids) async {
-    if (me.isEmpty) return;
-    try {
-      final value = _n.normalize({
-        RoomKeys.participants: ChatValueRemove(uids.toSet().toList()),
-      }, _n.room);
-      await _room.update(roomId, value);
-    } catch (_) {}
-  }
-
-  Future<void> toggleMute(String roomId) async {
-    if (me.isEmpty) return;
-    try {
-      final status = room(roomId).isMutedByMe;
-      final updates = _n.normalize({
-        "${RoomKeys.mutes}.$me": !status ? true : ChatValueDelete(),
-      }, _n.room);
-      await _room.update(roomId, updates);
-      notify();
-    } catch (_) {}
   }
 
   Future<void> resetToken() async {
@@ -837,7 +952,7 @@ class RoomManager extends BaseNotifier {
       final sender = profileFor(me);
       for (final participant in room.participants) {
         if (participant == me) continue;
-        final isMuted = room.isMuted(participant);
+        final isMuted = room.mutes.contains(participant);
         if (isMuted) continue;
         final receiver = profileFor(participant);
         if (receiver.isEmpty) continue;

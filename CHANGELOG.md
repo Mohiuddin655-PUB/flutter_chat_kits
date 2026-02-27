@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.7] - 2026-02-27
+
+- Add some useful methods to manage room easily
+
 ## [1.0.6] - 2026-02-26
 
 - Add sayHello to send message initially without room

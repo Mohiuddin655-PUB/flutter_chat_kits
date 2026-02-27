@@ -125,7 +125,11 @@ class _ChatInboxDirectState extends State<ChatInboxDirect>
             GestureDetector(
               onTap: () {
                 controller.close();
-                RoomManager.i.toggleMute(widget.room.id);
+                if (widget.room.isMutedByMe) {
+                  RoomManager.i.unmute(widget.room);
+                } else {
+                  RoomManager.i.mute(widget.room);
+                }
               },
               child: Container(
                 width: 40,
@@ -146,7 +150,7 @@ class _ChatInboxDirectState extends State<ChatInboxDirect>
             GestureDetector(
               onTap: () {
                 controller.close();
-                RoomManager.i.leave(widget.room.id);
+                RoomManager.i.leave(widget.room);
               },
               child: Container(
                 width: 40,

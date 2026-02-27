@@ -1,78 +1,56 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_kits/flutter_chat_kits.dart';
 
+import 'bottom_bar.dart';
+
 class ChatBody extends StatelessWidget {
   final ChatManager manager;
+  final double? scrollToBottomThreshold;
+  final Curve? scrollToBottomAnimationCurve;
+  final Duration? scrollToBottomAnimationDuration;
+  final ScrollController? scrollController;
+  final TextEditingController? textEditingController;
+  final EdgeInsets? contentPadding;
+  final EdgeInsets? contentMargin;
 
-  const ChatBody({super.key, required this.manager});
-
-  ChatUiConfigs get i => RoomManager.i.uiConfigs;
-
-  void _replyCancel() => manager.reply(null);
+  const ChatBody({
+    super.key,
+    required this.manager,
+    this.scrollToBottomThreshold,
+    this.scrollToBottomAnimationCurve,
+    this.scrollToBottomAnimationDuration,
+    this.scrollController,
+    this.contentPadding,
+    this.contentMargin,
+    this.textEditingController,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Stack(
+      fit: StackFit.expand,
       children: [
-        Expanded(child: ChatBoard(manager: manager)),
-        _buildReplyMessagePreview(context),
-        _buildInput(),
+        Padding(
+          padding: contentMargin ?? EdgeInsets.zero,
+          child: ChatBoard(
+            manager: manager,
+            scrollToBottomThreshold: scrollToBottomThreshold,
+            scrollToBottomAnimationCurve: scrollToBottomAnimationCurve,
+            scrollToBottomAnimationDuration: scrollToBottomAnimationDuration,
+            controller: scrollController,
+            padding: contentPadding,
+          ),
+        ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: ChatBottomBar(
+            manager: manager,
+            textEditingController: textEditingController,
+          ),
+        ),
       ],
-    );
-  }
-
-  Widget _buildInput() {
-    return ListenableBuilder(
-      listenable: manager,
-      builder: (context, child) {
-        if (manager.room.isLeaveByMe) {
-          return _buildLeaveFromRoomMessage(context);
-        }
-        if (manager.room.isBlockByMe) {
-          return _buildBlockedMessage(context);
-        }
-        return ChatInput(manager: manager);
-      },
-    );
-  }
-
-  Widget _buildBlockedMessage(BuildContext context) {
-    if (i.blockedInputBuilder == null) {
-      return Container(
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Text("You're unable to send message"),
-      );
-    }
-    return i.blockedInputBuilder!(context);
-  }
-
-  Widget _buildLeaveFromRoomMessage(BuildContext context) {
-    if (i.leaveFromRoomBuilder == null) {
-      return Container(
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-        child: Text("You're unable to send message"),
-      );
-    }
-    return i.leaveFromRoomBuilder!(context);
-  }
-
-  Widget _buildReplyMessagePreview(BuildContext context) {
-    if (i.replayMessageReplyBuilder == null) {
-      return SizedBox.shrink();
-    }
-    return ListenableBuilder(
-      listenable: manager,
-      builder: (context, child) {
-        final reply = manager.replyMsg;
-        if (reply == null) {
-          return SizedBox.shrink();
-        }
-        return i.replayMessageReplyBuilder!(
-          context,
-          reply,
-          _replyCancel,
-        );
-      },
     );
   }
 }
