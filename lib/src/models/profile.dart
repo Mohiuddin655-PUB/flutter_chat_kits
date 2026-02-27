@@ -18,7 +18,7 @@ final class ProfileKeys {
 
 class Profile extends Equatable {
   final String id;
-  final String name;
+  final String? name;
   final String? photo;
   final String platform;
   final String token;
@@ -26,10 +26,15 @@ class Profile extends Equatable {
   final ProfileExtra extra;
 
   bool get isEmpty {
-    return id.isEmpty || name.isEmpty || platform.isEmpty || token.isEmpty;
+    return id.isEmpty ||
+        (name ?? '').isEmpty ||
+        platform.isEmpty ||
+        token.isEmpty;
   }
 
-  String get nameSymbol => name.isEmpty ? "?" : name[0].toUpperCase();
+  String? get nameSymbol {
+    return (name ?? '').isEmpty ? null : name![0].toUpperCase();
+  }
 
   bool isActiveRoom(String roomId) {
     return roomId == room;
@@ -60,7 +65,7 @@ class Profile extends Equatable {
     return Profile(
       extra: extra ?? (ex is Map ? ex.parse() : {}),
       id: id is String && id.isNotEmpty ? id : '',
-      name: name is String && name.isNotEmpty ? name : '?',
+      name: name is String && name.isNotEmpty ? name : null,
       photo: photo is String && photo.isNotEmpty ? photo : null,
       platform: platform is String && platform.isNotEmpty ? platform : '',
       room: room is String && room.isNotEmpty ? room : null,
@@ -71,7 +76,7 @@ class Profile extends Equatable {
   Map<String, dynamic> get source {
     return {
       if (id.isNotEmpty) ProfileKeys.id: id,
-      if (name.isNotEmpty) ProfileKeys.name: name,
+      if ((name ?? '').isNotEmpty) ProfileKeys.name: name,
       if ((photo ?? '').isNotEmpty) ProfileKeys.photo: photo,
       if (platform.isNotEmpty) ProfileKeys.platform: platform,
       if ((room ?? '').isNotEmpty) ProfileKeys.room: room,

@@ -961,8 +961,8 @@ class RoomManager extends BaseNotifier {
         final content = ChatNotificationContent(
           id: msg.id,
           roomId: msg.roomId,
-          title: sender.name,
-          body: msg.notificationBody(sender.name),
+          title: sender.name ?? "?",
+          body: msg.notificationBody(sender.name ?? "?"),
           token: receiver.token,
           platform: receiver.platform,
         );
