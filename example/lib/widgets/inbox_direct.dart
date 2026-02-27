@@ -180,9 +180,7 @@ class _ChatInboxDirectState extends State<ChatInboxDirect>
                         : null,
                     child: widget.profile.photo == null
                         ? Text(
-                            widget.profile.name.characters.firstOrNull
-                                    ?.toUpperCase() ??
-                                "?",
+                            widget.profile.name?[0].toUpperCase() ?? "?",
                             style: const TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
@@ -207,7 +205,7 @@ class _ChatInboxDirectState extends State<ChatInboxDirect>
                       children: [
                         Expanded(
                           child: Text(
-                            widget.profile.name,
+                            widget.profile.name ?? "?",
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: hasUnseenMessages

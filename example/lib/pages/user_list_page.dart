@@ -62,8 +62,7 @@ class UsersListPage extends StatelessWidget {
             itemBuilder: (context, index) {
               final user = users[index];
               final status = RoomManager.i.statusFor(user.id);
-              final sign =
-                  user.name.characters.firstOrNull?.toUpperCase() ?? "?";
+              final sign = user.name?[0].toUpperCase() ?? "?";
               return ListTile(
                 leading: Stack(
                   children: [
@@ -102,7 +101,7 @@ class UsersListPage extends StatelessWidget {
                   ],
                 ),
                 title: Text(
-                  user.name,
+                  user.name ?? '',
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                   ),

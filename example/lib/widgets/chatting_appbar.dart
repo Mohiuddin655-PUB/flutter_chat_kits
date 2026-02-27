@@ -43,9 +43,7 @@ class ChattingAppBar extends StatelessWidget implements PreferredSizeWidget {
                     : null,
                 child: configs.profile.photo == null
                     ? Text(
-                        configs.profile.name.characters.firstOrNull
-                                ?.toUpperCase() ??
-                            "?",
+                        configs.profile.name?[0].toUpperCase() ?? "?",
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -67,7 +65,7 @@ class ChattingAppBar extends StatelessWidget implements PreferredSizeWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  configs.profile.name,
+                  configs.profile.name ?? '?',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,

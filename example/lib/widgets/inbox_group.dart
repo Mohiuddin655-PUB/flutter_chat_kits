@@ -118,7 +118,7 @@ class ChatInboxGroup extends StatelessWidget {
                       : null,
                   child: profile.photo == null
                       ? Text(
-                          profile.name[0].toUpperCase(),
+                          profile.name?[0].toUpperCase() ?? "?",
                           style: const TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
@@ -143,7 +143,7 @@ class ChatInboxGroup extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          profile.name,
+                          profile.name ?? "?",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: hasUnseenMessages

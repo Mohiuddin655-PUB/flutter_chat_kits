@@ -111,14 +111,14 @@ class _ForwardMessagePageState extends State<ForwardMessagePage> {
                                   : null,
                               child: otherUser.photo == null
                                   ? Text(
-                                      otherUser.name[0].toUpperCase(),
+                                      otherUser.name?[0].toUpperCase() ?? '',
                                       style: const TextStyle(
                                         fontWeight: FontWeight.bold,
                                       ),
                                     )
                                   : null,
                             ),
-                            title: Text(otherUser.name),
+                            title: Text(otherUser.name ?? ''),
                           );
                         }),
                       ],

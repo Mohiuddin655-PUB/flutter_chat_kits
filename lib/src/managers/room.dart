@@ -128,7 +128,7 @@ class RoomManager extends BaseNotifier {
     } else if (room is GroupRoom) {
       final typings = room.participants.map(typingFor);
       final types = typings.where((e) => !e.isEmpty && e.roomId == room.id);
-      if (types.isNotEmpty) return typings.toList();
+      if (types.isNotEmpty) return types.toList();
       return [];
     }
     return [];
@@ -160,7 +160,7 @@ class RoomManager extends BaseNotifier {
     if (room is GroupRoom) {
       return Profile(
         id: room.id,
-        name: room.name ?? "",
+        name: room.name,
         photo: room.photo,
         platform: '',
         token: '',
@@ -178,18 +178,10 @@ class RoomManager extends BaseNotifier {
 
   void _listenMeProfile() {
     final uid = me;
-    if (uid.isEmpty) {
-      return;
-    }
-    if (!isActive) {
-      return;
-    }
-    if (!isConnected) {
-      return;
-    }
-    if (_profileSubs.containsKey(uid)) {
-      return;
-    }
+    if (uid.isEmpty) return;
+    if (!isActive) return;
+    if (!isConnected) return;
+    if (_profileSubs.containsKey(uid)) return;
     _profileSubs[uid] = _profile.stream(uid).listen((v) {
       mappedProfiles[uid] = v;
       notify();
@@ -197,15 +189,10 @@ class RoomManager extends BaseNotifier {
   }
 
   void _listenMetadata(String uid, Iterable<String> leaves) {
-    if (uid.isEmpty) {
-      return;
-    }
-    if (!isActive) {
-      return;
-    }
-    if (!isConnected) {
-      return;
-    }
+    if (uid.isEmpty) return;
+    if (!isActive) return;
+    if (!isConnected) return;
+
     void apply(String type) {
       if (type == 'profile') {
         if (_profileSubs.containsKey(uid)) {
@@ -299,13 +286,13 @@ class RoomManager extends BaseNotifier {
 
       mappedRooms = Map.fromEntries(event.map((e) => MapEntry(e.id, e)));
 
-      final actives = mappedRooms.values.map((e) {
-        if (e is DirectRoom) return {e.friendId};
+      final actives = mappedRooms.values.fold(<String>{}, (a, e) {
+        if (e is DirectRoom) return {...a, e.friendId};
         if (e is GroupRoom && fetchGroupUserProfiles) {
-          return e.participants;
+          return {...a, ...e.participants};
         }
-        return <String>{};
-      }).reduce((a, b) => {...a, ...b});
+        return a;
+      });
 
       _listenAllMetadata(
         actives,
@@ -365,9 +352,7 @@ class RoomManager extends BaseNotifier {
       final closedRoom = this.room(room.id);
       if (closedRoom.isLocal || closedRoom.isEmpty) {
         final actives = mappedRooms.values
-            .map((e) => e.participants)
-            .reduce((a, b) => {...a, ...b})
-            .toList();
+            .fold(<String>{}, (a, e) => {...a, ...e.participants});
         if (room is DirectRoom) {
           if (!actives.contains(room.friendId)) {
             _cancelMetadata(room.friendId);
@@ -550,7 +535,7 @@ class RoomManager extends BaseNotifier {
     RoomExtra? extra,
   }) async {
     try {
-      if (!isConnected || !isActive || !isPaused) return Room.empty();
+      if (!isConnected || !isActive || isPaused) return Room.empty();
       if (me.isEmpty) return Room.empty();
       participants ??= [];
       if (!participants.contains(me)) {
@@ -830,7 +815,7 @@ class RoomManager extends BaseNotifier {
 
   Future<void> unmute(Room room) async {
     if (me.isEmpty) return;
-    if (!room.isPinnedByMe) return;
+    if (!room.isMutedByMe) return;
     put(room.copyWith(isMuted: false));
     try {
       final value = _n.normalize({
@@ -979,8 +964,8 @@ class RoomManager extends BaseNotifier {
           msg.copyWith(
             isForwarded: true,
             roomId: id,
-            createdAt: ChatValueTimestamp(),
-            updatedAt: ChatValueTimestamp(),
+            createdAt: ChatValueTimestamp.now(),
+            updatedAt: ChatValueTimestamp.now(),
           ),
         );
       }

@@ -27,7 +27,7 @@ class ChatProfile extends StatelessWidget {
                   : null,
               child: profile.photo == null
                   ? Text(
-                      profile.nameSymbol,
+                      profile.nameSymbol ?? '?',
                       style: const TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
@@ -37,7 +37,7 @@ class ChatProfile extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              profile.name,
+              profile.name ?? '?',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
