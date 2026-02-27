@@ -72,7 +72,7 @@ class Message extends Equatable {
     return x != null && x.isNotEmpty;
   }
 
-  bool get isRemovable => isDeleted || isDeletedByMe;
+  bool get shouldRemove => isDeleted || isDeletedByMe;
 
   bool get isSentByMe => senderId == me;
 
@@ -136,39 +136,36 @@ class Message extends Equatable {
     final msg = this;
     final isMe = senderId == me && !notification;
 
-    String body = '${isMe ? "You" : "{SENDER}"} sent a message';
+    String body = '${isMe ? "You" : sender ?? "{SENDER}"} sent a message';
 
     if (edited) {
-      body = "${isMe ? "You" : "{SENDER}"} edited a message";
+      body = "${isMe ? "You" : sender ?? "{SENDER}"} edited a message";
     } else if (deleted) {
-      body = "${isMe ? "You" : "{SENDER}"} deleted a message";
+      body = "${isMe ? "You" : sender ?? "{SENDER}"} deleted a message";
     } else {
       if (msg is TextMessage) {
         body = isMe
             ? 'You: ${msg.text}'
             : notification
                 ? msg.text
-                : "{SENDER_FOR_YOU}${msg.text}";
+                : "${sender != null ? "$sender: " : ""}${msg.text}";
       } else if (msg is ImageMessage) {
         body =
-            '${isMe ? "You" : "{SENDER}"} sent ${msg.urls.length > 1 ? 'photos' : 'a photo'}';
+            '${isMe ? "You" : sender ?? "{SENDER}"} sent ${msg.urls.length > 1 ? 'photos' : 'a photo'}';
       } else if (msg is VideoMessage) {
-        body = '${isMe ? "You" : "{SENDER}"} sent a video';
+        body = '${isMe ? "You" : sender ?? "{SENDER}"} sent a video';
       } else if (msg is AudioMessage) {
-        body = '${isMe ? "You" : "{SENDER}"} sent a voice message';
+        body = '${isMe ? "You" : sender ?? "{SENDER}"} sent a voice message';
       } else if (msg is LinkMessage) {
-        body = '${isMe ? "You" : "{SENDER}"} sent a link';
+        body = '${isMe ? "You" : sender ?? "{SENDER}"} sent a link';
       }
     }
-    if (sender != null && sender.isNotEmpty) {
-      return body.replaceAll("{SENDER}", sender);
-    }
+
     return body;
   }
 
   String notificationBody(String sender) {
-    final body = lastMessage(senderId: me, sender: sender, notification: true);
-    return body;
+    return lastMessage(senderId: senderId, sender: sender, notification: true);
   }
 
   bool isDelivered(Set<String> participants) {
@@ -350,33 +347,31 @@ class Message extends Equatable {
     MessageStatus? status,
     MessageExtra? extra,
   }) {
-    final deletes = this.deletes;
+    final deletes = Map<String, bool>.from(this.deletes);
     if (isDeletedForMe == true) deletes[me] = true;
 
-    final pins = this.pins;
+    final pins = Map<String, bool>.from(this.pins);
     if (isPinned != null) {
       if (isPinned) {
         pins[me] = true;
       } else {
-        if (pins.containsKey(me)) pins.remove(me);
+        pins.remove(me);
       }
     }
 
-    final removes = this.removes;
+    final removes = Map<String, bool>.from(this.removes);
     if (isRemoved == true) removes[me] = true;
 
-    final reactions = this.reactions;
+    final reactions = Map<String, String>.from(this.reactions);
     if (react != null) {
       if (react.isNotEmpty) {
         reactions[me] = react;
       } else {
-        if (reactions.containsKey(me)) {
-          reactions.remove(me);
-        }
+        reactions.remove(me);
       }
     }
 
-    final statuses = this.statuses;
+    final statuses = Map<String, MessageStatus>.from(this.statuses);
     if (status != null) statuses[me] = status;
 
     return Message(
