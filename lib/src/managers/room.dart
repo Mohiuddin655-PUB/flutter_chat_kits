@@ -400,9 +400,9 @@ class RoomManager extends BaseNotifier {
   }
 
   @override
-  void deattach() {
+  void detach() {
     markAsOnline(false);
-    super.deattach();
+    super.detach();
   }
 
   @override

@@ -31,7 +31,6 @@ abstract class BaseNotifier extends ChangeNotifier with WidgetsBindingObserver {
 
   BaseNotifier(this.pausedDurationWhenAppBackground, this.connectivity) {
     WidgetsBinding.instance.addObserver(this);
-    _subscription?.cancel();
     _subscription = connectivity.listen((v) {
       _connected = v;
       notify();
@@ -46,10 +45,10 @@ abstract class BaseNotifier extends ChangeNotifier with WidgetsBindingObserver {
   void attach(String uid) {
     me = uid;
     notifyListeners();
-    run();
+    if (_connected) run();
   }
 
-  void deattach() {
+  void detach() {
     me = '';
     notifyListeners();
     stop();

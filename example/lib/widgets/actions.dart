@@ -33,7 +33,7 @@ class _ChatMessageContextMenuState extends State<ChatMessageContextMenu> {
   Widget build(BuildContext context) {
     final msg = widget.message;
     final isMe = msg.isSentByMe;
-    final isDeletedForEveryone = msg.isRemovable;
+    final isDeletedForEveryone = msg.shouldRemove;
 
     final content = msg is TextMessage
         ? msg.text

@@ -233,7 +233,7 @@ class _MyAppState extends State<MyApp> {
       if (loggedIn) {
         RoomManager.i.attach(UserHelper.uid);
       } else {
-        RoomManager.i.deattach();
+        RoomManager.i.detach();
       }
       setState(() {});
     });

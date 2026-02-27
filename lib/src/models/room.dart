@@ -397,12 +397,8 @@ class Room extends Equatable {
 }
 
 class DirectRoom extends Room {
-  String get friendId => participants.firstOrNull ?? '';
-
-  bool get isActiveFriend {
-    final id = friendId;
-    if (id.isEmpty) return false;
-    return mutes.contains(friendId);
+  String get friendId {
+    return participants.firstWhere((e) => e != me, orElse: () => '');
   }
 
   const DirectRoom.empty() : this();

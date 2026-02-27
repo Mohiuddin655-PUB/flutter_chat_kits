@@ -36,6 +36,12 @@ class ChatManager extends BaseNotifier {
 
   List<Message> get messages => mappedMessages.values.toList();
 
+  List<Message> get sortedMessages {
+    final list = messages;
+    list.sort((a, b) => a.createdAt.timestamp.compareTo(b.createdAt.timestamp));
+    return list;
+  }
+
   List<Message> get unseens {
     return mappedMessages.values.where((e) => !e.isSeenByMe).toList();
   }
@@ -199,7 +205,6 @@ class ChatManager extends BaseNotifier {
 
   void delete(Message msg) async {
     if (!msg.isSentByMe || msg.isSending) return;
-    if (msg.isSending) return;
     put(msg.copyWith(isDeleted: true));
     final status = await RoomManager.i.updateMessage(
       msg.roomId,
@@ -251,9 +256,7 @@ class ChatManager extends BaseNotifier {
       roomId,
       Map.fromEntries(entries),
     );
-    if (v) {
-      return;
-    }
+    if (v) return;
     puts(current.map((e) => e.copyWith(isDeletedForMe: false)));
   }
 
@@ -262,10 +265,7 @@ class ChatManager extends BaseNotifier {
     pop(msg);
     final participants = room.participants.map((e) {
       if (e == me) return true;
-      if (msg.statuses.containsKey(e)) {
-        return msg.removes[e] ?? false;
-      }
-      return true;
+      return msg.removes[e] ?? false;
     });
     if (participants.every((e) => e == true)) {
       final status = await RoomManager.i.deleteMessage(msg);
@@ -283,9 +283,7 @@ class ChatManager extends BaseNotifier {
   void send(Message message) async {
     if (room.isLocal) {
       final global = await RoomManager.i.createOrGetRoom(room);
-      if (global.isEmpty) {
-        return;
-      }
+      if (global.isEmpty) return;
       room = global;
       notify();
     }
@@ -319,7 +317,7 @@ class ChatManager extends BaseNotifier {
       {
         MessageKeys.isEdited: true,
         MessageKeys.content: content,
-        MessageKeys.editedAt: ChatValueTimestamp(),
+        MessageKeys.editedAt: ChatValueTimestamp.now(),
       },
       roomValues: {
         if (room.lastMessageId == msg.id) ...{
