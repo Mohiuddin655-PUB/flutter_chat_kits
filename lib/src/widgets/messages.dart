@@ -125,6 +125,7 @@ class _ChatMessagesState extends State<ChatMessages> {
           manager: widget.manager,
           message: current,
           audioBuilder: config.audioBuilder,
+          customBuilder: config.customBuilder,
           deletedBuilder: config.deletedBuilder,
           imageBuilder: config.imageBuilder,
           linkBuilder: config.linkBuilder,

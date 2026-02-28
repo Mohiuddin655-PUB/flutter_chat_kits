@@ -27,6 +27,16 @@ extension ChatListParser on Iterable {
     return entries;
   }
 
+  Iterable<int> get parsedInts {
+    if (isEmpty) return {};
+    return parse(parser: (e) => e is num ? e.toInt() : 0);
+  }
+
+  Iterable<double> get parsedDoubles {
+    if (isEmpty) return {};
+    return parse(parser: (e) => e is num ? e.toDouble() : 0);
+  }
+
   Iterable<String> get parsedStrings {
     if (isEmpty) return {};
     return parse(parser: (e) => e.toString(), check: (e) => e.isNotEmpty);

@@ -1,11 +1,12 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 class ChatVoiceRecorder extends StatefulWidget {
-  final Function(String path, int duration) onComplete;
+  final Function(String path, int duration, List<double> waveform) onComplete;
   final Function(bool isRecording) onStateChanged;
 
   const ChatVoiceRecorder({
@@ -25,9 +26,13 @@ class _ChatVoiceRecorderState extends State<ChatVoiceRecorder> {
   Timer? _timer;
   String? _recordingPath;
 
+  StreamSubscription<Amplitude>? _amplitudeSub;
+  final List<double> _waveform = [];
+
   @override
   void dispose() {
     _timer?.cancel();
+    _amplitudeSub?.cancel();
     _recorder.dispose();
     super.dispose();
   }
@@ -39,6 +44,8 @@ class _ChatVoiceRecorderState extends State<ChatVoiceRecorder> {
         _recordingPath =
             '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.m4a';
 
+        _waveform.clear();
+
         await _recorder.start(
           const RecordConfig(
             encoder: AudioEncoder.aacLc,
@@ -47,6 +54,13 @@ class _ChatVoiceRecorderState extends State<ChatVoiceRecorder> {
           ),
           path: _recordingPath!,
         );
+
+        _amplitudeSub = _recorder
+            .onAmplitudeChanged(const Duration(milliseconds: 100))
+            .listen((amp) {
+          final normalized = max(0, (amp.current + 60) / 60);
+          _waveform.add(normalized.clamp(0.0, 1.0).toDouble());
+        });
 
         setState(() {
           _isRecording = true;
@@ -69,10 +83,12 @@ class _ChatVoiceRecorderState extends State<ChatVoiceRecorder> {
   Future<void> _stopRecording() async {
     try {
       _timer?.cancel();
+      await _amplitudeSub?.cancel();
+
       final path = await _recorder.stop();
 
       if (path != null && _recordDuration > 0) {
-        widget.onComplete(path, _recordDuration);
+        widget.onComplete(path, _recordDuration, _waveform);
       }
 
       setState(() {
@@ -89,6 +105,7 @@ class _ChatVoiceRecorderState extends State<ChatVoiceRecorder> {
   Future<void> _cancelRecording() async {
     try {
       _timer?.cancel();
+      await _amplitudeSub?.cancel();
       await _recorder.stop();
 
       setState(() {

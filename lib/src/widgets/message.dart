@@ -9,6 +9,7 @@ class ChatMessage extends StatefulWidget {
   final ChatManager manager;
   final Message message;
   final ChatMessageBuilder<AudioMessage>? audioBuilder;
+  final ChatMessageBuilder<CustomMessage>? customBuilder;
   final ChatMessageBuilder<Message>? deletedBuilder;
   final ChatMessageBuilder<ImageMessage>? imageBuilder;
   final ChatMessageBuilder<LinkMessage>? linkBuilder;
@@ -20,6 +21,7 @@ class ChatMessage extends StatefulWidget {
     required this.manager,
     required this.message,
     this.audioBuilder,
+    this.customBuilder,
     this.deletedBuilder,
     this.imageBuilder,
     this.linkBuilder,
@@ -74,6 +76,8 @@ class _ChatMessageState extends State<ChatMessage> {
     switch (msg) {
       case AudioMessage():
         return _buildAudioMessage(context, msg);
+      case CustomMessage():
+        return _buildCustomMessage(context, msg);
       case ImageMessage():
         return _buildImageMessage(context, msg);
       case LinkMessage():
@@ -92,6 +96,13 @@ class _ChatMessageState extends State<ChatMessage> {
       return const SizedBox.shrink();
     }
     return widget.audioBuilder!(context, widget.manager, msg);
+  }
+
+  Widget _buildCustomMessage(BuildContext context, CustomMessage msg) {
+    if (widget.customBuilder == null) {
+      return const SizedBox.shrink();
+    }
+    return widget.customBuilder!(context, widget.manager, msg);
   }
 
   Widget _buildDeletedMessage(BuildContext context, Message msg) {

@@ -16,12 +16,15 @@ final class MessageKeys {
   static const roomId = 'roomId';
   static const senderId = 'senderId';
   static const content = 'content';
+  static const data = 'data';
+  static const format = 'format';
   static const type = 'type';
   static const statuses = 'statuses';
   static const createdAt = 'createdAt';
   static const updatedAt = 'updatedAt';
   static const urls = 'urls';
   static const url = 'url';
+  static const waveform = 'waveform';
   static const replyId = 'replyId';
   static const reactions = 'reactions';
   static const pins = 'pins';
@@ -36,7 +39,7 @@ final class MessageKeys {
   static const extra = 'extra';
 }
 
-enum MessageType { none, audio, image, link, text, video }
+enum MessageType { none, audio, custom, image, link, text, video }
 
 enum MessageStatus { none, sending, failed, sent, delivered, seen, deleting }
 
@@ -306,7 +309,23 @@ class Message extends Equatable {
         return Message.empty();
       case MessageType.audio:
         if (mDuration == null || mUrl == null) return Message.empty();
-        return AudioMessage.from(msg, mDuration, mUrl);
+        final waveforms = source[MessageKeys.waveform];
+        return AudioMessage.from(
+          msg,
+          mDuration,
+          mUrl,
+          waveforms is Iterable ? waveforms.parsedDoubles.toList() : [],
+        );
+      case MessageType.custom:
+        final data = source[MessageKeys.data];
+        final format = source[MessageKeys.format];
+        final mFormat = format is String && format.isNotEmpty ? format : '';
+        if (mFormat.isEmpty) return Message.empty();
+        return CustomMessage.from(
+          msg,
+          data is Map ? data : {},
+          mFormat,
+        );
       case MessageType.image:
         final urls = source[MessageKeys.urls];
         final mUrls = urls is List && urls.isNotEmpty
@@ -445,6 +464,7 @@ class Message extends Equatable {
 class AudioMessage extends Message {
   final int durationInSec;
   final String url;
+  final List<double> waveform;
 
   Duration get duration => Duration(seconds: durationInSec);
 
@@ -467,6 +487,7 @@ class AudioMessage extends Message {
     super.extra = const {},
     this.durationInSec = 0,
     this.url = '',
+    this.waveform = const [],
   }) : super(type: MessageType.audio);
 
   const AudioMessage.empty() : this._();
@@ -475,6 +496,7 @@ class AudioMessage extends Message {
     required String roomId,
     required String path,
     required int durationInSec,
+    required List<double> waveform,
     MessageExtra? extra,
     String? id,
     String? senderId,
@@ -496,11 +518,17 @@ class AudioMessage extends Message {
       extra: extra ?? {},
       durationInSec: durationInSec,
       url: path,
+      waveform: waveform,
       statuses: {senderId: MessageStatus.sending},
     );
   }
 
-  factory AudioMessage.from(Message msg, int durationInSec, String url) {
+  factory AudioMessage.from(
+    Message msg,
+    int durationInSec,
+    String url,
+    List<double> waveform,
+  ) {
     return AudioMessage._(
       id: msg.id,
       roomId: msg.roomId,
@@ -520,6 +548,7 @@ class AudioMessage extends Message {
       extra: msg.extra,
       durationInSec: durationInSec,
       url: url,
+      waveform: waveform,
     );
   }
 
@@ -542,6 +571,7 @@ class AudioMessage extends Message {
     MessageExtra? extra,
     int? durationInSec,
     String? url,
+    List<double>? waveform,
   }) {
     final msg = super.copyWith(
       isDeleted: isDeleted,
@@ -560,25 +590,11 @@ class AudioMessage extends Message {
       status: status,
       extra: extra,
     );
-    return AudioMessage._(
-      id: msg.id,
-      roomId: msg.roomId,
-      senderId: msg.senderId,
-      createdAt: msg.createdAt,
-      statuses: msg.statuses,
-      deletes: msg.deletes,
-      pins: msg.pins,
-      removes: msg.removes,
-      editedAt: msg.editedAt,
-      updatedAt: msg.updatedAt,
-      replyId: msg.replyId,
-      reactions: msg.reactions,
-      isDeleted: msg.isDeleted,
-      isEdited: msg.isEdited,
-      isForwarded: msg.isForwarded,
-      extra: msg.extra,
-      durationInSec: durationInSec ?? this.durationInSec,
-      url: url ?? this.url,
+    return AudioMessage.from(
+      msg,
+      durationInSec ?? this.durationInSec,
+      url ?? this.url,
+      waveform ?? this.waveform,
     );
   }
 
@@ -588,14 +604,150 @@ class AudioMessage extends Message {
       ...super.source,
       if (durationInSec > 0) MessageKeys.durationInSec: durationInSec,
       if (url.isNotEmpty) MessageKeys.url: url,
+      if (waveform.isNotEmpty) MessageKeys.waveform: waveform,
     };
   }
 
   @override
-  List<Object?> get props => [...super.props, durationInSec, url];
+  List<Object?> get props => [...super.props, durationInSec, url, waveform];
 
   @override
-  String toString() => "$AudioMessage#$hashCode($url)";
+  String toString() => "$AudioMessage#$hashCode($durationInSec)";
+}
+
+class CustomMessage extends Message {
+  final Map data;
+  final String format;
+
+  const CustomMessage._({
+    super.id = '',
+    super.roomId = '',
+    super.senderId = '',
+    super.createdAt = const ChatValueTimestamp(),
+    super.updatedAt = const ChatValueTimestamp(),
+    super.statuses = const {},
+    super.deletes = const {},
+    super.pins = const {},
+    super.removes = const {},
+    super.editedAt,
+    super.replyId,
+    super.reactions = const {},
+    super.isDeleted = false,
+    super.isEdited = false,
+    super.isForwarded = false,
+    super.extra = const {},
+    this.data = const {},
+    this.format = '',
+  }) : super(type: MessageType.custom);
+
+  const CustomMessage.empty() : this._();
+
+  factory CustomMessage.create({
+    required Map data,
+    required String format,
+    required String roomId,
+    MessageExtra? extra,
+    String? id,
+    String? senderId,
+    String? replyId,
+    ChatValueTimestamp? createdAt,
+  }) {
+    senderId ??= RoomManager.i.me;
+    if (senderId.isEmpty) return CustomMessage.empty();
+    id ??= ChatHelper.generateMessageId();
+    replyId ??= ChatManager.ofOrNull(roomId)?.replyMsg?.id;
+    createdAt ??= ChatValueTimestamp.now();
+    return CustomMessage._(
+      id: id,
+      roomId: roomId,
+      senderId: senderId,
+      replyId: replyId,
+      createdAt: createdAt,
+      updatedAt: createdAt,
+      extra: extra ?? {},
+      data: data,
+      format: format,
+      statuses: {senderId: MessageStatus.sending},
+    );
+  }
+
+  factory CustomMessage.from(Message msg, Map data, String format) {
+    return CustomMessage._(
+      id: msg.id,
+      roomId: msg.roomId,
+      senderId: msg.senderId,
+      createdAt: msg.createdAt,
+      updatedAt: msg.updatedAt,
+      statuses: msg.statuses,
+      deletes: msg.deletes,
+      pins: msg.pins,
+      removes: msg.removes,
+      editedAt: msg.editedAt,
+      replyId: msg.replyId,
+      reactions: msg.reactions,
+      isDeleted: msg.isDeleted,
+      isEdited: msg.isEdited,
+      isForwarded: msg.isForwarded,
+      extra: msg.extra,
+      data: data,
+      format: format,
+    );
+  }
+
+  @override
+  CustomMessage copyWith({
+    bool? isDeleted,
+    bool? isDeletedForMe,
+    bool? isEdited,
+    bool? isForwarded,
+    bool? isPinned,
+    bool? isRemoved,
+    String? id,
+    String? roomId,
+    String? senderId,
+    String? react,
+    ChatValueTimestamp? createdAt,
+    ChatValueTimestamp? editedAt,
+    ChatValueTimestamp? updatedAt,
+    MessageStatus? status,
+    MessageExtra? extra,
+    Map? data,
+    String? format,
+  }) {
+    final msg = super.copyWith(
+      isDeleted: isDeleted,
+      isDeletedForMe: isDeletedForMe,
+      isEdited: isEdited,
+      isForwarded: isForwarded,
+      isPinned: isPinned,
+      isRemoved: isRemoved,
+      id: id,
+      roomId: roomId,
+      senderId: senderId,
+      react: react,
+      createdAt: createdAt,
+      editedAt: editedAt,
+      updatedAt: updatedAt,
+      status: status,
+      extra: extra,
+    );
+    return CustomMessage.from(msg, data ?? this.data, format ?? this.format);
+  }
+
+  @override
+  Map<String, dynamic> get source {
+    return {
+      ...super.source,
+      if (data.isNotEmpty) MessageKeys.data: data,
+      if (format.isNotEmpty) MessageKeys.format: format,
+    };
+  }
+
+  @override
+  List<Object?> get props => [...super.props, data, format];
+
+  @override
+  String toString() => "$CustomMessage#$hashCode($format)";
 }
 
 class ImageMessage extends Message {
@@ -714,26 +866,7 @@ class ImageMessage extends Message {
       status: status,
       extra: extra,
     );
-    return ImageMessage._(
-      id: msg.id,
-      roomId: msg.roomId,
-      senderId: msg.senderId,
-      createdAt: msg.createdAt,
-      statuses: msg.statuses,
-      deletes: msg.deletes,
-      pins: msg.pins,
-      removes: msg.removes,
-      editedAt: msg.editedAt,
-      updatedAt: msg.updatedAt,
-      replyId: msg.replyId,
-      reactions: msg.reactions,
-      isDeleted: msg.isDeleted,
-      isEdited: msg.isEdited,
-      isForwarded: msg.isForwarded,
-      extra: msg.extra,
-      caption: caption ?? this.caption,
-      urls: urls ?? this.urls,
-    );
+    return ImageMessage.from(msg, caption ?? this.caption, urls ?? this.urls);
   }
 
   @override
@@ -862,25 +995,7 @@ class LinkMessage extends Message {
       status: status,
       extra: extra,
     );
-    return LinkMessage._(
-      id: msg.id,
-      roomId: msg.roomId,
-      senderId: msg.senderId,
-      createdAt: msg.createdAt,
-      statuses: msg.statuses,
-      deletes: msg.deletes,
-      pins: msg.pins,
-      removes: msg.removes,
-      editedAt: msg.editedAt,
-      updatedAt: msg.updatedAt,
-      replyId: msg.replyId,
-      reactions: msg.reactions,
-      isDeleted: msg.isDeleted,
-      isEdited: msg.isEdited,
-      isForwarded: msg.isForwarded,
-      extra: msg.extra,
-      link: link ?? this.link,
-    );
+    return LinkMessage.from(msg, link ?? this.link);
   }
 
   @override
@@ -1005,25 +1120,7 @@ class TextMessage extends Message {
       status: status,
       extra: extra,
     );
-    return TextMessage._(
-      id: msg.id,
-      roomId: msg.roomId,
-      senderId: msg.senderId,
-      createdAt: msg.createdAt,
-      statuses: msg.statuses,
-      deletes: msg.deletes,
-      pins: msg.pins,
-      removes: msg.removes,
-      editedAt: msg.editedAt,
-      updatedAt: msg.updatedAt,
-      replyId: msg.replyId,
-      reactions: msg.reactions,
-      isDeleted: msg.isDeleted,
-      isEdited: msg.isEdited,
-      isForwarded: msg.isForwarded,
-      extra: msg.extra,
-      text: text ?? this.text,
-    );
+    return TextMessage.from(msg, text ?? this.text);
   }
 
   @override
@@ -1174,27 +1271,12 @@ class VideoMessage extends Message {
       status: status,
       extra: extra,
     );
-    return VideoMessage._(
-      id: msg.id,
-      roomId: msg.roomId,
-      senderId: msg.senderId,
-      createdAt: msg.createdAt,
-      statuses: msg.statuses,
-      deletes: msg.deletes,
-      pins: msg.pins,
-      removes: msg.removes,
-      editedAt: msg.editedAt,
-      updatedAt: msg.updatedAt,
-      replyId: msg.replyId,
-      reactions: msg.reactions,
-      isDeleted: msg.isDeleted,
-      isEdited: msg.isEdited,
-      isForwarded: msg.isForwarded,
-      extra: msg.extra,
-      caption: caption ?? this.caption,
-      thumbnail: thumbnail ?? this.thumbnail,
-      durationInSec: durationInSec ?? this.durationInSec,
-      url: url ?? this.url,
+    return VideoMessage.from(
+      msg,
+      caption ?? this.caption,
+      durationInSec ?? this.durationInSec,
+      thumbnail ?? this.thumbnail,
+      url ?? this.url,
     );
   }
 

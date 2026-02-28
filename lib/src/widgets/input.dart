@@ -133,11 +133,16 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     if (text.isNotEmpty) _controller.clear();
   }
 
-  Future<void> _sendVoice(String path, int duration) async {
+  Future<void> _sendVoice(
+    String path,
+    int duration,
+    List<double> waveform,
+  ) async {
     widget.manager.send(AudioMessage.create(
       roomId: widget.manager.roomId,
       path: path,
       durationInSec: duration,
+      waveform: waveform,
     ));
   }
 

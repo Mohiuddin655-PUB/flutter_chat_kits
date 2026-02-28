@@ -88,7 +88,8 @@ class ChatInputConfigs {
   final TextEditingController editor;
   final VoidCallback onCaptureImage;
   final VoidCallback onSendText;
-  final void Function(String path, int duration) onSendVoice;
+  final void Function(String path, int duration, List<double> waveform)
+      onSendVoice;
   final VoidCallback onSendImages;
   final VoidCallback onCaptureVideo;
   final VoidCallback onSendVideo;
@@ -111,6 +112,7 @@ class ChatUiConfigs {
   final ChatInboxBuilder<DirectRoom, Typing?>? directInboxBuilder;
   final ChatInboxBuilder<GroupRoom, List<Typing>>? groupInboxBuilder;
   final ChatMessageBuilder<AudioMessage>? audioBuilder;
+  final ChatMessageBuilder<CustomMessage>? customBuilder;
   final ChatMessageBuilder<Message>? deletedBuilder;
   final ChatMessageBuilder<ImageMessage>? imageBuilder;
   final ChatMessageBuilder<LinkMessage>? linkBuilder;
@@ -144,6 +146,7 @@ class ChatUiConfigs {
     this.messagesBuilder,
     this.groupInboxBuilder,
     this.audioBuilder,
+    this.customBuilder,
     this.deletedBuilder,
     this.imageBuilder,
     this.linkBuilder,

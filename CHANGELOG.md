@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.8] - 2026-02-28
+
+- CustomMessage support
+- AudioMessage waveform support
+
 ## [1.0.7] - 2026-02-27
 
 - Fix minor bugs
