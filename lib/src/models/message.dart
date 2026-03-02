@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:equatable/equatable.dart';
 
 import '../managers/chat.dart';
@@ -17,7 +19,7 @@ final class MessageKeys {
   static const senderId = 'senderId';
   static const content = 'content';
   static const data = 'data';
-  static const format = 'format';
+  static const kind = 'kind';
   static const type = 'type';
   static const statuses = 'statuses';
   static const createdAt = 'createdAt';
@@ -310,21 +312,22 @@ class Message extends Equatable {
       case MessageType.audio:
         if (mDuration == null || mUrl == null) return Message.empty();
         final waveforms = source[MessageKeys.waveform];
+        final mWaveform = waveforms is String ? jsonDecode(waveforms) : null;
         return AudioMessage.from(
           msg,
           mDuration,
           mUrl,
-          waveforms is Iterable ? waveforms.parsedDoubles.toList() : [],
+          mWaveform is Iterable ? mWaveform.parsedDoubles.toList() : [],
         );
       case MessageType.custom:
         final data = source[MessageKeys.data];
-        final format = source[MessageKeys.format];
-        final mFormat = format is String && format.isNotEmpty ? format : '';
-        if (mFormat.isEmpty) return Message.empty();
+        final kind = source[MessageKeys.kind];
+        final mKind = kind is String && kind.isNotEmpty ? kind : '';
+        if (mKind.isEmpty) return Message.empty();
         return CustomMessage.from(
           msg,
           data is Map ? data : {},
-          mFormat,
+          mKind,
         );
       case MessageType.image:
         final urls = source[MessageKeys.urls];
@@ -359,6 +362,7 @@ class Message extends Equatable {
     String? id,
     String? roomId,
     String? senderId,
+    String? replyId,
     String? react,
     ChatValueTimestamp? createdAt,
     ChatValueTimestamp? editedAt,
@@ -402,7 +406,7 @@ class Message extends Equatable {
       deletes: deletes,
       editedAt: editedAt ?? this.editedAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      replyId: replyId,
+      replyId: replyId ?? this.replyId,
       reactions: reactions,
       isDeleted: isDeleted ?? this.isDeleted,
       isEdited: isEdited ?? this.isEdited,
@@ -492,11 +496,11 @@ class AudioMessage extends Message {
 
   const AudioMessage.empty() : this._();
 
-  factory AudioMessage.create({
-    required String roomId,
-    required String path,
-    required int durationInSec,
-    required List<double> waveform,
+  factory AudioMessage.create(
+    String path,
+    int durationInSec,
+    List<double> waveform, {
+    String? roomId,
     MessageExtra? extra,
     String? id,
     String? senderId,
@@ -506,11 +510,10 @@ class AudioMessage extends Message {
     senderId ??= RoomManager.i.me;
     if (senderId.isEmpty) return AudioMessage.empty();
     id ??= ChatHelper.generateMessageId();
-    replyId ??= ChatManager.ofOrNull(roomId)?.replyMsg?.id;
     createdAt ??= ChatValueTimestamp.now();
     return AudioMessage._(
       id: id,
-      roomId: roomId,
+      roomId: roomId ?? '',
       senderId: senderId,
       replyId: replyId,
       createdAt: createdAt,
@@ -563,6 +566,7 @@ class AudioMessage extends Message {
     String? id,
     String? roomId,
     String? senderId,
+    String? replyId,
     String? react,
     ChatValueTimestamp? createdAt,
     ChatValueTimestamp? editedAt,
@@ -583,6 +587,7 @@ class AudioMessage extends Message {
       id: id,
       roomId: roomId,
       senderId: senderId,
+      replyId: replyId,
       react: react,
       createdAt: createdAt,
       editedAt: editedAt,
@@ -604,7 +609,7 @@ class AudioMessage extends Message {
       ...super.source,
       if (durationInSec > 0) MessageKeys.durationInSec: durationInSec,
       if (url.isNotEmpty) MessageKeys.url: url,
-      if (waveform.isNotEmpty) MessageKeys.waveform: waveform,
+      if (waveform.isNotEmpty) MessageKeys.waveform: jsonEncode(waveform),
     };
   }
 
@@ -617,7 +622,7 @@ class AudioMessage extends Message {
 
 class CustomMessage extends Message {
   final Map data;
-  final String format;
+  final String kind;
 
   const CustomMessage._({
     super.id = '',
@@ -637,15 +642,15 @@ class CustomMessage extends Message {
     super.isForwarded = false,
     super.extra = const {},
     this.data = const {},
-    this.format = '',
+    this.kind = '',
   }) : super(type: MessageType.custom);
 
   const CustomMessage.empty() : this._();
 
-  factory CustomMessage.create({
-    required Map data,
-    required String format,
-    required String roomId,
+  factory CustomMessage.create(
+    String kind,
+    Map data, {
+    String? roomId,
     MessageExtra? extra,
     String? id,
     String? senderId,
@@ -655,23 +660,22 @@ class CustomMessage extends Message {
     senderId ??= RoomManager.i.me;
     if (senderId.isEmpty) return CustomMessage.empty();
     id ??= ChatHelper.generateMessageId();
-    replyId ??= ChatManager.ofOrNull(roomId)?.replyMsg?.id;
     createdAt ??= ChatValueTimestamp.now();
     return CustomMessage._(
       id: id,
-      roomId: roomId,
+      roomId: roomId ?? '',
       senderId: senderId,
       replyId: replyId,
       createdAt: createdAt,
       updatedAt: createdAt,
       extra: extra ?? {},
       data: data,
-      format: format,
+      kind: kind,
       statuses: {senderId: MessageStatus.sending},
     );
   }
 
-  factory CustomMessage.from(Message msg, Map data, String format) {
+  factory CustomMessage.from(Message msg, Map data, String kind) {
     return CustomMessage._(
       id: msg.id,
       roomId: msg.roomId,
@@ -690,7 +694,7 @@ class CustomMessage extends Message {
       isForwarded: msg.isForwarded,
       extra: msg.extra,
       data: data,
-      format: format,
+      kind: kind,
     );
   }
 
@@ -705,6 +709,7 @@ class CustomMessage extends Message {
     String? id,
     String? roomId,
     String? senderId,
+    String? replyId,
     String? react,
     ChatValueTimestamp? createdAt,
     ChatValueTimestamp? editedAt,
@@ -712,7 +717,7 @@ class CustomMessage extends Message {
     MessageStatus? status,
     MessageExtra? extra,
     Map? data,
-    String? format,
+    String? kind,
   }) {
     final msg = super.copyWith(
       isDeleted: isDeleted,
@@ -724,6 +729,7 @@ class CustomMessage extends Message {
       id: id,
       roomId: roomId,
       senderId: senderId,
+      replyId: replyId,
       react: react,
       createdAt: createdAt,
       editedAt: editedAt,
@@ -731,7 +737,7 @@ class CustomMessage extends Message {
       status: status,
       extra: extra,
     );
-    return CustomMessage.from(msg, data ?? this.data, format ?? this.format);
+    return CustomMessage.from(msg, data ?? this.data, kind ?? this.kind);
   }
 
   @override
@@ -739,15 +745,15 @@ class CustomMessage extends Message {
     return {
       ...super.source,
       if (data.isNotEmpty) MessageKeys.data: data,
-      if (format.isNotEmpty) MessageKeys.format: format,
+      if (kind.isNotEmpty) MessageKeys.kind: kind,
     };
   }
 
   @override
-  List<Object?> get props => [...super.props, data, format];
+  List<Object?> get props => [...super.props, data, kind];
 
   @override
-  String toString() => "$CustomMessage#$hashCode($format)";
+  String toString() => "$CustomMessage#$hashCode($kind)";
 }
 
 class ImageMessage extends Message {
@@ -777,9 +783,9 @@ class ImageMessage extends Message {
 
   const ImageMessage.empty() : this._();
 
-  factory ImageMessage.create({
-    required String roomId,
-    required List<String> paths,
+  factory ImageMessage.create(
+    Iterable<String> paths, {
+    String? roomId,
     String? caption,
     MessageExtra? extra,
     String? id,
@@ -790,11 +796,10 @@ class ImageMessage extends Message {
     senderId ??= RoomManager.i.me;
     if (senderId.isEmpty) return ImageMessage.empty();
     id ??= ChatHelper.generateMessageId();
-    replyId ??= ChatManager.ofOrNull(roomId)?.replyMsg?.id;
     createdAt ??= ChatValueTimestamp.now();
     return ImageMessage._(
       id: id,
-      roomId: roomId,
+      roomId: roomId ?? '',
       senderId: senderId,
       createdAt: createdAt,
       updatedAt: createdAt,
@@ -802,7 +807,7 @@ class ImageMessage extends Message {
       extra: extra ?? {},
       replyId: replyId,
       caption: caption,
-      urls: paths,
+      urls: paths.toList(),
     );
   }
 
@@ -840,6 +845,7 @@ class ImageMessage extends Message {
     String? id,
     String? roomId,
     String? senderId,
+    String? replyId,
     String? react,
     ChatValueTimestamp? createdAt,
     ChatValueTimestamp? editedAt,
@@ -859,6 +865,7 @@ class ImageMessage extends Message {
       id: id,
       roomId: roomId,
       senderId: senderId,
+      replyId: replyId,
       react: react,
       createdAt: createdAt,
       editedAt: editedAt,
@@ -910,9 +917,9 @@ class LinkMessage extends Message {
 
   const LinkMessage.empty() : this._();
 
-  factory LinkMessage.create({
-    required String roomId,
-    required String link,
+  factory LinkMessage.create(
+    String link, {
+    String? roomId,
     MessageExtra? extra,
     String? id,
     String? senderId,
@@ -922,11 +929,10 @@ class LinkMessage extends Message {
     senderId ??= RoomManager.i.me;
     if (senderId.isEmpty) return LinkMessage.empty();
     id ??= ChatHelper.generateMessageId();
-    replyId ??= ChatManager.ofOrNull(roomId)?.replyMsg?.id;
     createdAt ??= ChatValueTimestamp.now();
     return LinkMessage._(
       id: id,
-      roomId: roomId,
+      roomId: roomId ?? '',
       senderId: senderId,
       createdAt: createdAt,
       updatedAt: createdAt,
@@ -970,6 +976,7 @@ class LinkMessage extends Message {
     String? id,
     String? roomId,
     String? senderId,
+    String? replyId,
     String? react,
     ChatValueTimestamp? createdAt,
     ChatValueTimestamp? editedAt,
@@ -988,6 +995,7 @@ class LinkMessage extends Message {
       id: id,
       roomId: roomId,
       senderId: senderId,
+      replyId: replyId,
       react: react,
       createdAt: createdAt,
       editedAt: editedAt,
@@ -1035,9 +1043,9 @@ class TextMessage extends Message {
 
   const TextMessage.empty() : this._();
 
-  factory TextMessage.create({
-    required String roomId,
-    required String text,
+  factory TextMessage.create(
+    String text, {
+    String? roomId,
     MessageExtra? extra,
     String? id,
     String? senderId,
@@ -1047,11 +1055,10 @@ class TextMessage extends Message {
     senderId ??= RoomManager.i.me;
     if (senderId.isEmpty) return TextMessage.empty();
     id ??= ChatHelper.generateMessageId();
-    replyId ??= ChatManager.ofOrNull(roomId)?.replyMsg?.id;
     createdAt ??= ChatValueTimestamp.now();
     return TextMessage._(
       id: id,
-      roomId: roomId,
+      roomId: roomId ?? '',
       senderId: senderId,
       createdAt: createdAt,
       updatedAt: createdAt,
@@ -1095,6 +1102,7 @@ class TextMessage extends Message {
     String? id,
     String? roomId,
     String? senderId,
+    String? replyId,
     String? react,
     ChatValueTimestamp? createdAt,
     ChatValueTimestamp? editedAt,
@@ -1113,6 +1121,7 @@ class TextMessage extends Message {
       id: id,
       roomId: roomId,
       senderId: senderId,
+      replyId: replyId,
       react: react,
       createdAt: createdAt,
       editedAt: editedAt,
@@ -1168,11 +1177,11 @@ class VideoMessage extends Message {
 
   const VideoMessage.empty() : this._();
 
-  factory VideoMessage.create({
-    required String roomId,
-    required String path,
-    required String thumbnail,
-    required int durationInSec,
+  factory VideoMessage.create(
+    String path,
+    String thumbnail,
+    int durationInSec, {
+    String? roomId,
     String? caption,
     MessageExtra? extra,
     String? id,
@@ -1183,11 +1192,10 @@ class VideoMessage extends Message {
     senderId ??= RoomManager.i.me;
     if (senderId.isEmpty) return VideoMessage.empty();
     id ??= ChatHelper.generateMessageId();
-    replyId ??= ChatManager.ofOrNull(roomId)?.replyMsg?.id;
     createdAt ??= ChatValueTimestamp.now();
     return VideoMessage._(
       id: id,
-      roomId: roomId,
+      roomId: roomId ?? '',
       senderId: senderId,
       createdAt: createdAt,
       updatedAt: createdAt,
@@ -1243,6 +1251,7 @@ class VideoMessage extends Message {
     String? id,
     String? roomId,
     String? senderId,
+    String? replyId,
     String? react,
     ChatValueTimestamp? createdAt,
     ChatValueTimestamp? editedAt,
@@ -1264,6 +1273,7 @@ class VideoMessage extends Message {
       id: id,
       roomId: roomId,
       senderId: senderId,
+      replyId: replyId,
       react: react,
       createdAt: createdAt,
       editedAt: editedAt,

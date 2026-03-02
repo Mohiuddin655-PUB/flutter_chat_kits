@@ -287,8 +287,9 @@ class ChatManager extends BaseNotifier {
       room = global;
       notify();
     }
-    put(message);
-    RoomManager.i.createMessage(message).then((v) {
+    final msg = message.copyWith(roomId: roomId, replyId: replyMsg?.id);
+    put(msg);
+    RoomManager.i.createMessage(msg).then((v) {
       put(v);
     });
   }

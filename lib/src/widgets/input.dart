@@ -98,10 +98,7 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
       _isTyping = false;
       widget.manager.typing(false);
     }
-    widget.manager.send(TextMessage.create(
-      roomId: widget.manager.roomId,
-      text: text,
-    ));
+    widget.manager.send(TextMessage.create(text));
     _controller.clear();
   }
 
@@ -111,8 +108,7 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     if (images.isEmpty) return;
     final text = _controller.text.trim();
     widget.manager.send(ImageMessage.create(
-      roomId: widget.manager.roomId,
-      paths: images,
+      images,
       caption: text.isEmpty ? null : text,
     ));
     if (text.isNotEmpty) _controller.clear();
@@ -125,8 +121,7 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     final text = _controller.text.trim();
     widget.manager.send(
       ImageMessage.create(
-        roomId: widget.manager.roomId,
-        paths: [image],
+        [image],
         caption: text.isEmpty ? null : text,
       ),
     );
@@ -138,12 +133,7 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     int duration,
     List<double> waveform,
   ) async {
-    widget.manager.send(AudioMessage.create(
-      roomId: widget.manager.roomId,
-      path: path,
-      durationInSec: duration,
-      waveform: waveform,
-    ));
+    widget.manager.send(AudioMessage.create(path, duration, waveform));
   }
 
   Future<void> _sendCapturedVideo() async {
@@ -159,10 +149,9 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     final text = _controller.text.trim();
     widget.manager.send(
       VideoMessage.create(
-        roomId: widget.manager.roomId,
-        path: video,
-        thumbnail: thumbnail,
-        durationInSec: duration,
+        video,
+        thumbnail,
+        duration,
         caption: text.isEmpty ? null : text,
       ),
     );
@@ -182,10 +171,9 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     final text = _controller.text.trim();
     widget.manager.send(
       VideoMessage.create(
-        roomId: widget.manager.roomId,
-        path: video,
-        thumbnail: thumbnail,
-        durationInSec: duration,
+        video,
+        thumbnail,
+        duration,
         caption: text.isEmpty ? null : text,
       ),
     );
