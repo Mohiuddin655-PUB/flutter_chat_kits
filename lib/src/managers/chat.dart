@@ -330,6 +330,16 @@ class ChatManager extends BaseNotifier {
     put(msg);
   }
 
+  void update(String msgId, Map<String, dynamic> changes) async {
+    final msg = mappedMessages[msgId];
+    if (msg == null) return;
+    put(msg.resolveWith(changes));
+    RoomManager.i.updateMessage(roomId, msgId, changes).then((v) {
+      if (v) return;
+      put(msg);
+    });
+  }
+
   void forward(List<String> targetRoomIds, Message msg) async {
     if (targetRoomIds.isEmpty) return;
     put(msg.copyWith(isForwarded: true));

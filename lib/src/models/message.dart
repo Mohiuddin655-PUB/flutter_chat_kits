@@ -418,6 +418,50 @@ class Message extends Equatable {
     );
   }
 
+  Message resolveWith(Map changes) {
+    final extra = changes[MessageKeys.extra];
+    final id = changes[MessageKeys.id];
+    final roomId = changes[MessageKeys.roomId];
+    final senderId = changes[MessageKeys.senderId];
+    final type = changes[MessageKeys.type];
+    final statuses = changes[MessageKeys.statuses];
+    final createdAt = changes[MessageKeys.createdAt];
+    final updatedAt = changes[MessageKeys.updatedAt];
+    final replyId = changes[MessageKeys.replyId];
+    final reactions = changes[MessageKeys.reactions];
+    final pins = changes[MessageKeys.pins];
+    final deletes = changes[MessageKeys.deletes];
+    final removes = changes[MessageKeys.removes];
+    final isDeleted = changes[MessageKeys.isDeleted];
+    final isEdited = changes[MessageKeys.isEdited];
+    final editedAt = changes[MessageKeys.editedAt];
+    final isForwarded = changes[MessageKeys.isForwarded];
+    return Message(
+      id: id is String && id.isNotEmpty ? id : this.id,
+      roomId: roomId is String && roomId.isNotEmpty ? roomId : this.roomId,
+      senderId:
+          senderId is String && senderId.isNotEmpty ? senderId : this.senderId,
+      type: MessageType.values.tryParse(type) ?? this.type,
+      statuses: MessageStatus.values.tryReferences(statuses) ?? this.statuses,
+      createdAt: ChatValueTimestamp.tryParse(createdAt) ?? this.createdAt,
+      updatedAt: ChatValueTimestamp.tryParse(updatedAt) ?? this.updatedAt,
+      editedAt: ChatValueTimestamp.tryParse(editedAt) ?? this.editedAt,
+      reactions: reactions is Map
+          ? reactions.tryParse() ?? this.reactions
+          : this.reactions,
+      deletes:
+          deletes is Map ? deletes.tryParse() ?? this.deletes : this.deletes,
+      pins: pins is Map ? pins.tryParse() ?? this.pins : this.pins,
+      removes:
+          removes is Map ? removes.tryParse() ?? this.removes : this.removes,
+      replyId: replyId is String && replyId.isNotEmpty ? replyId : this.replyId,
+      isEdited: isEdited is bool ? isEdited : this.isEdited,
+      isForwarded: isForwarded is bool ? isForwarded : this.isForwarded,
+      isDeleted: isDeleted is bool ? isDeleted : this.isDeleted,
+      extra: extra is Map ? extra.tryParse() ?? this.extra : this.extra,
+    );
+  }
+
   Map<String, dynamic> get source {
     return {
       if (id.isNotEmpty) MessageKeys.id: id,
@@ -604,6 +648,25 @@ class AudioMessage extends Message {
   }
 
   @override
+  AudioMessage resolveWith(Map changes) {
+    final msg = super.resolveWith(changes);
+    final durationInSec = changes[MessageKeys.durationInSec];
+    final url = changes[MessageKeys.url];
+    final waveform = changes[MessageKeys.waveform];
+    final mWaveform = waveform is String ? jsonDecode(waveform) : null;
+    return AudioMessage.from(
+      msg,
+      durationInSec is num && durationInSec > 0
+          ? durationInSec.toInt()
+          : this.durationInSec,
+      url is String && url.isNotEmpty ? url : this.url,
+      mWaveform is Iterable && mWaveform.isNotEmpty
+          ? mWaveform.parsedDoubles.toList()
+          : this.waveform,
+    );
+  }
+
+  @override
   Map<String, dynamic> get source {
     return {
       ...super.source,
@@ -738,6 +801,18 @@ class CustomMessage extends Message {
       extra: extra,
     );
     return CustomMessage.from(msg, data ?? this.data, kind ?? this.kind);
+  }
+
+  @override
+  CustomMessage resolveWith(Map changes) {
+    final msg = super.resolveWith(changes);
+    final data = changes[MessageKeys.data];
+    final kind = changes[MessageKeys.kind];
+    return CustomMessage.from(
+      msg,
+      data is Map && data.isNotEmpty ? data : this.data,
+      kind is String && kind.isNotEmpty ? kind : this.kind,
+    );
   }
 
   @override
@@ -877,6 +952,20 @@ class ImageMessage extends Message {
   }
 
   @override
+  ImageMessage resolveWith(Map changes) {
+    final msg = super.resolveWith(changes);
+    final caption = changes[MessageKeys.content];
+    final urls = changes[MessageKeys.urls];
+    return ImageMessage.from(
+      msg,
+      caption is String && caption.isNotEmpty ? caption : this.caption,
+      urls is Iterable && urls.isNotEmpty
+          ? urls.parsedStrings.toList()
+          : this.urls,
+    );
+  }
+
+  @override
   Map<String, dynamic> get source {
     return {
       ...super.source,
@@ -1007,6 +1096,16 @@ class LinkMessage extends Message {
   }
 
   @override
+  LinkMessage resolveWith(Map changes) {
+    final msg = super.resolveWith(changes);
+    final link = changes[MessageKeys.content];
+    return LinkMessage.from(
+      msg,
+      link is String && link.isNotEmpty ? link : this.link,
+    );
+  }
+
+  @override
   Map<String, dynamic> get source {
     return {...super.source, if (link.isNotEmpty) MessageKeys.content: link};
   }
@@ -1130,6 +1229,16 @@ class TextMessage extends Message {
       extra: extra,
     );
     return TextMessage.from(msg, text ?? this.text);
+  }
+
+  @override
+  TextMessage resolveWith(Map changes) {
+    final msg = super.resolveWith(changes);
+    final text = changes[MessageKeys.content];
+    return TextMessage.from(
+      msg,
+      text is String && text.isNotEmpty ? text : this.text,
+    );
   }
 
   @override
@@ -1287,6 +1396,24 @@ class VideoMessage extends Message {
       durationInSec ?? this.durationInSec,
       thumbnail ?? this.thumbnail,
       url ?? this.url,
+    );
+  }
+
+  @override
+  VideoMessage resolveWith(Map changes) {
+    final msg = super.resolveWith(changes);
+    final caption = changes[MessageKeys.content];
+    final durationInSec = changes[MessageKeys.durationInSec];
+    final thumbnail = changes[MessageKeys.thumbnail];
+    final url = changes[MessageKeys.url];
+    return VideoMessage.from(
+      msg,
+      caption is String && caption.isNotEmpty ? caption : this.caption,
+      durationInSec is num && durationInSec > 0
+          ? durationInSec.toInt()
+          : this.durationInSec,
+      thumbnail is String && thumbnail.isNotEmpty ? thumbnail : this.thumbnail,
+      url is String && url.isNotEmpty ? url : this.url,
     );
   }
 

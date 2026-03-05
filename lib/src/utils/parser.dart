@@ -1,6 +1,6 @@
 extension MapParser on Map {
-  Map<K, V> parse<K, V>({V? Function(Object? raw)? parser}) {
-    if (isEmpty) return {};
+  Map<K, V>? tryParse<K, V>({V? Function(Object? raw)? parser}) {
+    if (isEmpty) return null;
     final entries = this.entries.map((e) {
       final k = e.key;
       final v = parser?.call(e.value) ?? e.value;
@@ -8,7 +8,13 @@ extension MapParser on Map {
       if (v is! V) return null;
       return MapEntry(k, v);
     }).whereType<MapEntry<K, V>>();
-    return Map.fromEntries(entries);
+    final x = Map.fromEntries(entries);
+    if (x.isEmpty) return null;
+    return x;
+  }
+
+  Map<K, V> parse<K, V>({V? Function(Object? raw)? parser}) {
+    return tryParse(parser: parser) ?? {};
   }
 }
 

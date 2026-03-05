@@ -44,7 +44,7 @@ class ChatValueTimestamp extends ChatValue {
     return ChatValueTimestamp._(dateTime);
   }
 
-  factory ChatValueTimestamp.parse(Object? source) {
+  static ChatValueTimestamp? tryParse(Object? source) {
     if (source is ChatValueTimestamp) {
       return source;
     }
@@ -63,10 +63,12 @@ class ChatValueTimestamp extends ChatValue {
           DateTime.fromMillisecondsSinceEpoch(source.toInt()),
         );
       }
-    } else {
-      return RoomManager.i.timestamp(source);
     }
-    return ChatValueTimestamp();
+    return null;
+  }
+
+  static ChatValueTimestamp parse(Object? source) {
+    return tryParse(source) ?? RoomManager.i.timestamp(source);
   }
 
   @override
