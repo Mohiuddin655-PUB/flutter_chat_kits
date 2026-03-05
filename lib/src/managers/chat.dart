@@ -224,6 +224,16 @@ class ChatManager extends BaseNotifier {
     }
   }
 
+  void deletePermanently(Message msg) async {
+    if (!msg.isSentByMe || msg.isSending) return;
+    pop(msg);
+    final status = await RoomManager.i.deleteMessage(msg);
+    if (!status) {
+      put(msg);
+      return;
+    }
+  }
+
   void deleteForMe(Message msg) async {
     if (msg.isSending) return;
     put(msg.copyWith(isDeletedForMe: true));
