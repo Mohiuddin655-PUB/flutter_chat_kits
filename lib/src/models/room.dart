@@ -93,7 +93,11 @@ class Room extends Equatable {
     return lastMessageStatuses[me]?.name;
   }
 
-  String formattedLastMessage({String? sender, bool isTyping = false}) {
+  String formattedLastMessage({
+    String? sender,
+    bool isTyping = false,
+    String Function(String key, String value)? formatter,
+  }) {
     if (isTyping) {
       return 'Typing...';
     }
@@ -105,10 +109,19 @@ class Room extends Equatable {
     if (lastMessageDeleted) {
       return '${isMe ? 'You' : sender} deleted a message';
     }
-    final msg = lastMessage ?? '';
+    String msg = lastMessage ?? '';
+    if (formatter != null) {
+      if (msg.startsWith('{SENDER}')) {
+        msg = formatter('{SENDER}', msg);
+      }
+      if (msg.startsWith('{SENDER_OR_EMPTY}')) {
+        msg = formatter('{SENDER_OR_EMPTY}', msg);
+      }
+      return msg;
+    }
     return msg
         .replaceAll("{SENDER}", isMe ? "You" : sender)
-        .replaceAll('{SENDER_FOR_YOU}', isMe ? "You: " : '');
+        .replaceAll('{SENDER_OR_EMPTY}', isMe ? "You: " : '');
   }
 
   const Room.empty() : this();

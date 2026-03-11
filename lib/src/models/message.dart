@@ -139,30 +139,24 @@ class Message extends Equatable {
     bool notification = false,
   }) {
     final msg = this;
-    final isMe = senderId == me && !notification;
 
-    String body = '${isMe ? "You" : sender ?? "{SENDER}"} sent a message';
+    String body = '{SENDER} sent a message';
 
     if (edited) {
-      body = "${isMe ? "You" : sender ?? "{SENDER}"} edited a message";
+      body = "{SENDER} edited a message";
     } else if (deleted) {
-      body = "${isMe ? "You" : sender ?? "{SENDER}"} deleted a message";
+      body = "{SENDER} deleted a message";
     } else {
       if (msg is TextMessage) {
-        body = isMe
-            ? 'You: ${msg.text}'
-            : notification
-                ? msg.text
-                : "${sender != null ? "$sender: " : ""}${msg.text}";
+        body = notification ? msg.text : "{SENDER_OR_EMPTY}${msg.text}";
       } else if (msg is ImageMessage) {
-        body =
-            '${isMe ? "You" : sender ?? "{SENDER}"} sent ${msg.urls.length > 1 ? 'photos' : 'a photo'}';
+        body = '{SENDER} sent ${msg.urls.length > 1 ? 'photos' : 'a photo'}';
       } else if (msg is VideoMessage) {
-        body = '${isMe ? "You" : sender ?? "{SENDER}"} sent a video';
+        body = '{SENDER} sent a video';
       } else if (msg is AudioMessage) {
-        body = '${isMe ? "You" : sender ?? "{SENDER}"} sent a voice message';
+        body = '{SENDER} sent a voice message';
       } else if (msg is LinkMessage) {
-        body = '${isMe ? "You" : sender ?? "{SENDER}"} sent a link';
+        body = '{SENDER} sent a link';
       }
     }
 
