@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.12] - 2026-03-011
+## [1.0.13] - 2026-03-011
 
 - Improve send message text
 
