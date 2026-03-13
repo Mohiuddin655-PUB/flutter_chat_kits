@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_kits/flutter_chat_kits.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:video_compress/video_compress.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
@@ -168,33 +167,6 @@ void main() async {
           context,
           MaterialPageRoute(builder: (_) => ChatPage(manager: manager)),
         );
-      },
-      onImageCapture: (context) {
-        return ImagePicker().pickImage(source: ImageSource.camera).then((v) {
-          return v?.path;
-        });
-      },
-      onImagePicker: (context) {
-        return ImagePicker().pickImage(source: ImageSource.gallery).then((v) {
-          return v?.path;
-        });
-      },
-      onMutiImagePicker: (context) {
-        return ImagePicker().pickMultiImage().then((v) {
-          if (v.isEmpty) return [];
-          final paths = v.map((e) => e.path).toList();
-          return paths;
-        });
-      },
-      onVideoCapture: (context) {
-        return ImagePicker().pickVideo(source: ImageSource.camera).then((v) {
-          return v?.path;
-        });
-      },
-      onVideoPicker: (context) {
-        return ImagePicker().pickVideo(source: ImageSource.gallery).then((v) {
-          return v?.path;
-        });
       },
       onVideoDuration: (context, path) async {
         final info = await VideoCompress.getMediaInfo(path);

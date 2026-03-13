@@ -102,26 +102,22 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     _controller.clear();
   }
 
-  Future<void> _sendImages() async {
-    if (i.onMutiImagePicker == null) return;
-    final images = await i.onMutiImagePicker!(context);
-    if (images.isEmpty) return;
+  Future<void> _sendImages(List<String> paths) async {
+    if (paths.isEmpty) return;
     final text = _controller.text.trim();
     widget.manager.send(ImageMessage.create(
-      images,
+      paths,
       caption: text.isEmpty ? null : text,
     ));
     if (text.isNotEmpty) _controller.clear();
   }
 
-  Future<void> _sendCapturedImage() async {
-    if (i.onImageCapture == null) return;
-    final image = await i.onImageCapture!(context);
-    if (image == null) return;
+  Future<void> _sendCapturedImage(String path) async {
+    if (path.isEmpty) return;
     final text = _controller.text.trim();
     widget.manager.send(
       ImageMessage.create(
-        [image],
+        [path],
         caption: text.isEmpty ? null : text,
       ),
     );
@@ -136,20 +132,18 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     widget.manager.send(AudioMessage.create(path, duration, waveform));
   }
 
-  Future<void> _sendCapturedVideo() async {
+  Future<void> _sendCapturedVideo(String path) async {
     if (i.onVideoDuration == null) return;
     if (i.onVideoThumbnail == null) return;
-    if (i.onVideoCapture == null) return;
-    final video = await i.onVideoCapture!(context);
-    if (video == null || !mounted) return;
-    final duration = await i.onVideoDuration!(context, video);
+    if (path.isEmpty) return;
+    final duration = await i.onVideoDuration!(context, path);
     if (duration <= 0 || !mounted) return;
-    final thumbnail = await i.onVideoThumbnail!(context, video);
+    final thumbnail = await i.onVideoThumbnail!(context, path);
     if (thumbnail == null || thumbnail.isEmpty) return;
     final text = _controller.text.trim();
     widget.manager.send(
       VideoMessage.create(
-        video,
+        path,
         thumbnail,
         duration,
         caption: text.isEmpty ? null : text,
@@ -158,20 +152,18 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     if (text.isNotEmpty) _controller.clear();
   }
 
-  Future<void> _sendVideo() async {
+  Future<void> _sendVideo(String path) async {
     if (i.onVideoDuration == null) return;
     if (i.onVideoThumbnail == null) return;
-    if (i.onVideoPicker == null) return;
-    final video = await i.onVideoPicker!(context);
-    if (video == null || !mounted) return;
-    final duration = await i.onVideoDuration!(context, video);
+    if (path.isEmpty) return;
+    final duration = await i.onVideoDuration!(context, path);
     if (duration <= 0 || !mounted) return;
-    final thumbnail = await i.onVideoThumbnail!(context, video);
+    final thumbnail = await i.onVideoThumbnail!(context, path);
     if (thumbnail == null || thumbnail.isEmpty) return;
     final text = _controller.text.trim();
     widget.manager.send(
       VideoMessage.create(
-        video,
+        path,
         thumbnail,
         duration,
         caption: text.isEmpty ? null : text,

@@ -86,13 +86,13 @@ class ChatAppbarConfigs {
 class ChatInputConfigs {
   final ChatManager manager;
   final TextEditingController editor;
-  final VoidCallback onCaptureImage;
+  final ValueChanged<String> onCaptureImage;
   final VoidCallback onSendText;
   final void Function(String path, int duration, List<double> waveform)
       onSendVoice;
-  final VoidCallback onSendImages;
-  final VoidCallback onCaptureVideo;
-  final VoidCallback onSendVideo;
+  final ValueChanged<List<String>> onSendImages;
+  final ValueChanged<String> onCaptureVideo;
+  final ValueChanged<String> onSendVideo;
 
   const ChatInputConfigs({
     required this.manager,
@@ -130,11 +130,6 @@ class ChatUiConfigs {
   final WidgetBuilder? noMessagesBuilder;
   final ChatVisibilityBuilder? visibilityDetectorBuilder;
   final ChattingPageCallback onChatStart;
-  final ChatContentPickerCallback? onImageCapture;
-  final ChatContentPickerCallback? onImagePicker;
-  final ChatContentsPickerCallback? onMutiImagePicker;
-  final ChatContentPickerCallback? onVideoCapture;
-  final ChatContentPickerCallback? onVideoPicker;
   final ChatVideoDurationCallback? onVideoDuration;
   final ChatVideoThumbnailCallback? onVideoThumbnail;
 
@@ -160,11 +155,6 @@ class ChatUiConfigs {
     this.replayMessageReplyBuilder,
     this.inputBuilder,
     this.scrollDownButtonBuilder,
-    this.onImageCapture,
-    this.onImagePicker,
-    this.onMutiImagePicker,
-    this.onVideoCapture,
-    this.onVideoPicker,
     this.onVideoDuration,
     this.onVideoThumbnail,
     this.blockedInputBuilder,

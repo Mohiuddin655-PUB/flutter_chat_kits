@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_kits/flutter_chat_kits.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'attachment_picker.dart';
 import 'voice_recorder.dart';
@@ -17,16 +18,34 @@ class ChattingInput extends StatefulWidget {
 }
 
 class _ChattingInputState extends State<ChattingInput> {
+  String? _path(XFile? file) => file?.path;
+
   void _showAttachmentOptions() {
-    ChatAttachmentPicker.show(context).then((tag) {
+    ChatAttachmentPicker.show(context).then((tag) async {
       if (tag == 'camera') {
-        widget.configs.onCaptureImage();
+        final path = await ImagePicker()
+            .pickImage(source: ImageSource.camera)
+            .then((e) => e?.path);
+        if (path == null) return;
+        widget.configs.onCaptureImage(path);
       } else if (tag == 'images') {
-        widget.configs.onSendImages();
+        final paths = await ImagePicker()
+            .pickMultiImage()
+            .then((e) => e.map((e) => e.path).toList());
+        if (paths.isEmpty) return;
+        widget.configs.onSendImages(paths);
       } else if (tag == 'captured_video') {
-        widget.configs.onCaptureVideo();
+        final path = await ImagePicker()
+            .pickVideo(source: ImageSource.camera)
+            .then((e) => e?.path);
+        if (path == null) return;
+        widget.configs.onCaptureVideo(path);
       } else if (tag == 'video') {
-        widget.configs.onSendVideo();
+        final path = await ImagePicker()
+            .pickVideo(source: ImageSource.gallery)
+            .then((e) => e?.path);
+        if (path == null) return;
+        widget.configs.onSendVideo(path);
       }
     });
   }

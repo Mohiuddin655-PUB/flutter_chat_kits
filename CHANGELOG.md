@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.14] - 2026-03-013
+
+- Improve input bar and remove all media pickers from ChatUi util
+
 ## [1.0.13] - 2026-03-011
 
 - Improve send message text
