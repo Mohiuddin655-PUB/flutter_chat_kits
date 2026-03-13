@@ -86,13 +86,29 @@ class ChatAppbarConfigs {
 class ChatInputConfigs {
   final ChatManager manager;
   final TextEditingController editor;
-  final ValueChanged<String> onCaptureImage;
+  final void Function(
+    String path, {
+    Map<String, dynamic>? extra,
+  }) onCaptureImage;
   final VoidCallback onSendText;
-  final void Function(String path, int duration, List<double> waveform)
-      onSendVoice;
-  final ValueChanged<List<String>> onSendImages;
-  final ValueChanged<String> onCaptureVideo;
-  final ValueChanged<String> onSendVideo;
+  final void Function(
+    String path,
+    int duration,
+    List<double> waveform, {
+    Map<String, dynamic>? extra,
+  }) onSendVoice;
+  final void Function(
+    List<String> paths, {
+    Map<String, dynamic>? extra,
+  }) onSendImages;
+  final void Function(
+    String path, {
+    Map<String, dynamic>? extra,
+  }) onCaptureVideo;
+  final void Function(
+    String path, {
+    Map<String, dynamic>? extra,
+  }) onSendVideo;
 
   const ChatInputConfigs({
     required this.manager,

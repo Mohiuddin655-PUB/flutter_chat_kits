@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_kits/flutter_chat_kits.dart';
 
-import 'bottom_bar.dart';
-
 class ChatBody extends StatelessWidget {
   final ChatManager manager;
   final double? scrollToBottomThreshold;

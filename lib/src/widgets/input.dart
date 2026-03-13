@@ -89,7 +89,9 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     });
   }
 
-  void _sendText() {
+  void _sendText({
+    Map<String, dynamic>? extra,
+  }) {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
@@ -98,27 +100,35 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
       _isTyping = false;
       widget.manager.typing(false);
     }
-    widget.manager.send(TextMessage.create(text));
+    widget.manager.send(TextMessage.create(text, extra: extra));
     _controller.clear();
   }
 
-  Future<void> _sendImages(List<String> paths) async {
+  Future<void> _sendImages(
+    List<String> paths, {
+    Map<String, dynamic>? extra,
+  }) async {
     if (paths.isEmpty) return;
     final text = _controller.text.trim();
     widget.manager.send(ImageMessage.create(
       paths,
       caption: text.isEmpty ? null : text,
+      extra: extra,
     ));
     if (text.isNotEmpty) _controller.clear();
   }
 
-  Future<void> _sendCapturedImage(String path) async {
+  Future<void> _sendCapturedImage(
+    String path, {
+    Map<String, dynamic>? extra,
+  }) async {
     if (path.isEmpty) return;
     final text = _controller.text.trim();
     widget.manager.send(
       ImageMessage.create(
         [path],
         caption: text.isEmpty ? null : text,
+        extra: extra,
       ),
     );
     if (text.isNotEmpty) _controller.clear();
@@ -127,12 +137,21 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
   Future<void> _sendVoice(
     String path,
     int duration,
-    List<double> waveform,
-  ) async {
-    widget.manager.send(AudioMessage.create(path, duration, waveform));
+    List<double> waveform, {
+    Map<String, dynamic>? extra,
+  }) async {
+    widget.manager.send(AudioMessage.create(
+      path,
+      duration,
+      waveform,
+      extra: extra,
+    ));
   }
 
-  Future<void> _sendCapturedVideo(String path) async {
+  Future<void> _sendCapturedVideo(
+    String path, {
+    Map<String, dynamic>? extra,
+  }) async {
     if (i.onVideoDuration == null) return;
     if (i.onVideoThumbnail == null) return;
     if (path.isEmpty) return;
@@ -147,12 +166,16 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
         thumbnail,
         duration,
         caption: text.isEmpty ? null : text,
+        extra: extra,
       ),
     );
     if (text.isNotEmpty) _controller.clear();
   }
 
-  Future<void> _sendVideo(String path) async {
+  Future<void> _sendVideo(
+    String path, {
+    Map<String, dynamic>? extra,
+  }) async {
     if (i.onVideoDuration == null) return;
     if (i.onVideoThumbnail == null) return;
     if (path.isEmpty) return;
@@ -167,6 +190,7 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
         thumbnail,
         duration,
         caption: text.isEmpty ? null : text,
+        extra: extra,
       ),
     );
     if (text.isNotEmpty) _controller.clear();

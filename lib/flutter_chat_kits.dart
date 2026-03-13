@@ -18,6 +18,7 @@ export 'src/utils/enum_parser.dart';
 export 'src/utils/field_value.dart';
 export 'src/utils/parser.dart';
 export 'src/widgets/appbar.dart';
+export 'src/widgets/bottom_bar.dart';
 export 'src/widgets/chat_board.dart';
 export 'src/widgets/chat_body.dart';
 export 'src/widgets/inbox.dart';

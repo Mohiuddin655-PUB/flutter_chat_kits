@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.15] - 2026-03-013
+
+- Improve input bar callbacks to send also extra
+
 ## [1.0.14] - 2026-03-013
 
 - Improve input bar and remove all media pickers from ChatUi util
