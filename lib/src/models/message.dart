@@ -146,7 +146,6 @@ class Message extends Equatable {
   Message get replyMessage {
     final msg = ChatManager.ofOrNull(roomId)?.mappedMessages[replyId];
     if (msg == null) return Message.empty();
-    if (msg.isDeleted || msg.isDeletedByMe) return Message.empty();
     return msg;
   }
 
