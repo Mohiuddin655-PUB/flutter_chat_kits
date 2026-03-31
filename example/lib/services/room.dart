@@ -34,8 +34,8 @@ class ChatRoomService extends ChatRoomDelegate {
   @override
   Stream<List<Room>> stream(String uid) {
     return _ref
-        .where(RoomKeys.participants, arrayContains: uid)
-        .orderBy(RoomKeys.updatedAt, descending: true)
+        .where(RoomKeys.i.participants, arrayContains: uid)
+        .orderBy(RoomKeys.i.updatedAt, descending: true)
         .snapshots()
         .map((event) {
       final value = event.docs.map((e) => Room.parse(e.data())).toList();

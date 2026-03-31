@@ -11,34 +11,62 @@ import '../utils/parser.dart';
 
 typedef MessageExtra = Map<String, dynamic>;
 
-final class MessageKeys {
-  const MessageKeys._();
+class MessageKeys {
+  final String id;
+  final String roomId;
+  final String senderId;
+  final String content;
+  final String data;
+  final String kind;
+  final String type;
+  final String statuses;
+  final String createdAt;
+  final String updatedAt;
+  final String urls;
+  final String url;
+  final String waveform;
+  final String replyId;
+  final String reactions;
+  final String pins;
+  final String durationInSec;
+  final String thumbnail;
+  final String deletes;
+  final String removes;
+  final String isDeleted;
+  final String isEdited;
+  final String editedAt;
+  final String isForwarded;
+  final String extra;
 
-  static const id = 'id';
-  static const roomId = 'roomId';
-  static const senderId = 'senderId';
-  static const content = 'content';
-  static const data = 'data';
-  static const kind = 'kind';
-  static const type = 'type';
-  static const statuses = 'statuses';
-  static const createdAt = 'createdAt';
-  static const updatedAt = 'updatedAt';
-  static const urls = 'urls';
-  static const url = 'url';
-  static const waveform = 'waveform';
-  static const replyId = 'replyId';
-  static const reactions = 'reactions';
-  static const pins = 'pins';
-  static const durationInSec = 'durationInSec';
-  static const thumbnail = 'thumbnail';
-  static const deletes = 'deletes';
-  static const removes = 'removes';
-  static const isDeleted = 'isDeleted';
-  static const isEdited = 'isEdited';
-  static const editedAt = 'editedAt';
-  static const isForwarded = 'isForwarded';
-  static const extra = 'extra';
+  static MessageKeys get i => RoomManager.i.modelConfigs.messageKeys;
+
+  const MessageKeys({
+    this.id = 'id',
+    this.roomId = 'roomId',
+    this.senderId = 'senderId',
+    this.content = 'content',
+    this.data = 'data',
+    this.kind = 'kind',
+    this.type = 'type',
+    this.statuses = 'statuses',
+    this.createdAt = 'createdAt',
+    this.updatedAt = 'updatedAt',
+    this.urls = 'urls',
+    this.url = 'url',
+    this.waveform = 'waveform',
+    this.replyId = 'replyId',
+    this.reactions = 'reactions',
+    this.pins = 'pins',
+    this.durationInSec = 'durationInSec',
+    this.thumbnail = 'thumbnail',
+    this.deletes = 'deletes',
+    this.removes = 'removes',
+    this.isDeleted = 'isDeleted',
+    this.isEdited = 'isEdited',
+    this.editedAt = 'editedAt',
+    this.isForwarded = 'isForwarded',
+    this.extra = 'extra',
+  });
 }
 
 enum MessageType { none, audio, custom, image, link, text, video }
@@ -254,27 +282,28 @@ class Message extends Equatable {
   factory Message.parse(Object? source, {MessageExtra? extra}) {
     if (source is Message) return source;
     if (source is! Map) return Message.empty();
-    final ex = source[MessageKeys.extra];
-    final id = source[MessageKeys.id];
-    final roomId = source[MessageKeys.roomId];
-    final senderId = source[MessageKeys.senderId];
-    final type = source[MessageKeys.type];
-    final statuses = source[MessageKeys.statuses];
-    final createdAt = source[MessageKeys.createdAt];
-    final updatedAt = source[MessageKeys.updatedAt];
-    final replyId = source[MessageKeys.replyId];
-    final reactions = source[MessageKeys.reactions];
-    final pins = source[MessageKeys.pins];
-    final deletes = source[MessageKeys.deletes];
-    final removes = source[MessageKeys.removes];
-    final isDeleted = source[MessageKeys.isDeleted];
-    final isEdited = source[MessageKeys.isEdited];
-    final editedAt = source[MessageKeys.editedAt];
-    final isForwarded = source[MessageKeys.isForwarded];
+    final keys = MessageKeys.i;
+    final ex = source[keys.extra];
+    final id = source[keys.id];
+    final roomId = source[keys.roomId];
+    final senderId = source[keys.senderId];
+    final type = source[keys.type];
+    final statuses = source[keys.statuses];
+    final createdAt = source[keys.createdAt];
+    final updatedAt = source[keys.updatedAt];
+    final replyId = source[keys.replyId];
+    final reactions = source[keys.reactions];
+    final pins = source[keys.pins];
+    final deletes = source[keys.deletes];
+    final removes = source[keys.removes];
+    final isDeleted = source[keys.isDeleted];
+    final isEdited = source[keys.isEdited];
+    final editedAt = source[keys.editedAt];
+    final isForwarded = source[keys.isForwarded];
 
-    final content = source[MessageKeys.content];
-    final url = source[MessageKeys.url];
-    final duration = source[MessageKeys.durationInSec];
+    final content = source[keys.content];
+    final url = source[keys.url];
+    final duration = source[keys.durationInSec];
 
     final msg = Message(
       id: id is String && id.isNotEmpty ? id : '',
@@ -305,7 +334,7 @@ class Message extends Equatable {
         return Message.empty();
       case MessageType.audio:
         if (mDuration == null || mUrl == null) return Message.empty();
-        final waveforms = source[MessageKeys.waveform];
+        final waveforms = source[keys.waveform];
         final mWaveform = waveforms is String ? jsonDecode(waveforms) : null;
         return AudioMessage.from(
           msg,
@@ -314,8 +343,8 @@ class Message extends Equatable {
           mWaveform is Iterable ? mWaveform.parsedDoubles.toList() : [],
         );
       case MessageType.custom:
-        final data = source[MessageKeys.data];
-        final kind = source[MessageKeys.kind];
+        final data = source[keys.data];
+        final kind = source[keys.kind];
         final mKind = kind is String && kind.isNotEmpty ? kind : '';
         if (mKind.isEmpty) return Message.empty();
         return CustomMessage.from(
@@ -324,7 +353,7 @@ class Message extends Equatable {
           mKind,
         );
       case MessageType.image:
-        final urls = source[MessageKeys.urls];
+        final urls = source[keys.urls];
         final mUrls = urls is List && urls.isNotEmpty
             ? urls.map((e) => e.toString()).where((e) => e.isNotEmpty).toList()
             : <String>[];
@@ -337,7 +366,7 @@ class Message extends Equatable {
         if (mContent == null) return Message.empty();
         return TextMessage.from(msg, mContent);
       case MessageType.video:
-        final t = source[MessageKeys.thumbnail];
+        final t = source[keys.thumbnail];
         final mT = t is String && t.isNotEmpty ? t : null;
         if (mDuration == null || mUrl == null || mT == null) {
           return Message.empty();
@@ -413,23 +442,24 @@ class Message extends Equatable {
   }
 
   Message resolveWith(Map changes) {
-    final extra = changes[MessageKeys.extra];
-    final id = changes[MessageKeys.id];
-    final roomId = changes[MessageKeys.roomId];
-    final senderId = changes[MessageKeys.senderId];
-    final type = changes[MessageKeys.type];
-    final statuses = changes[MessageKeys.statuses];
-    final createdAt = changes[MessageKeys.createdAt];
-    final updatedAt = changes[MessageKeys.updatedAt];
-    final replyId = changes[MessageKeys.replyId];
-    final reactions = changes[MessageKeys.reactions];
-    final pins = changes[MessageKeys.pins];
-    final deletes = changes[MessageKeys.deletes];
-    final removes = changes[MessageKeys.removes];
-    final isDeleted = changes[MessageKeys.isDeleted];
-    final isEdited = changes[MessageKeys.isEdited];
-    final editedAt = changes[MessageKeys.editedAt];
-    final isForwarded = changes[MessageKeys.isForwarded];
+    final keys = MessageKeys.i;
+    final extra = changes[keys.extra];
+    final id = changes[keys.id];
+    final roomId = changes[keys.roomId];
+    final senderId = changes[keys.senderId];
+    final type = changes[keys.type];
+    final statuses = changes[keys.statuses];
+    final createdAt = changes[keys.createdAt];
+    final updatedAt = changes[keys.updatedAt];
+    final replyId = changes[keys.replyId];
+    final reactions = changes[keys.reactions];
+    final pins = changes[keys.pins];
+    final deletes = changes[keys.deletes];
+    final removes = changes[keys.removes];
+    final isDeleted = changes[keys.isDeleted];
+    final isEdited = changes[keys.isEdited];
+    final editedAt = changes[keys.editedAt];
+    final isForwarded = changes[keys.isForwarded];
     return Message(
       id: id is String && id.isNotEmpty ? id : this.id,
       roomId: roomId is String && roomId.isNotEmpty ? roomId : this.roomId,
@@ -457,25 +487,26 @@ class Message extends Equatable {
   }
 
   Map<String, dynamic> get source {
+    final keys = MessageKeys.i;
     return {
-      if (id.isNotEmpty) MessageKeys.id: id,
-      if (roomId.isNotEmpty) MessageKeys.roomId: roomId,
-      if (senderId.isNotEmpty) MessageKeys.senderId: senderId,
-      if (type != MessageType.none) MessageKeys.type: type.name,
-      if (!createdAt.isEmpty) MessageKeys.createdAt: createdAt,
-      if (!updatedAt.isEmpty) MessageKeys.updatedAt: updatedAt,
+      if (id.isNotEmpty) keys.id: id,
+      if (roomId.isNotEmpty) keys.roomId: roomId,
+      if (senderId.isNotEmpty) keys.senderId: senderId,
+      if (type != MessageType.none) keys.type: type.name,
+      if (!createdAt.isEmpty) keys.createdAt: createdAt,
+      if (!updatedAt.isEmpty) keys.updatedAt: updatedAt,
       if (statuses.isNotEmpty)
-        MessageKeys.statuses: statuses.map((k, v) => MapEntry(k, v.name)),
-      if (deletes.isNotEmpty) MessageKeys.deletes: deletes,
-      if (removes.isNotEmpty) MessageKeys.removes: removes,
-      if (!editedAt.isEmpty) MessageKeys.editedAt: editedAt,
-      if (reactions.isNotEmpty) MessageKeys.reactions: reactions,
-      if (replyId.isNotEmpty) MessageKeys.replyId: replyId,
-      if (isDeleted) MessageKeys.isDeleted: isDeleted,
-      if (isEdited) MessageKeys.isEdited: isEdited,
-      if (isForwarded) MessageKeys.isForwarded: isForwarded,
-      if (pins.isNotEmpty) MessageKeys.pins: pins,
-      if (extra.isNotEmpty) MessageKeys.extra: extra,
+        keys.statuses: statuses.map((k, v) => MapEntry(k, v.name)),
+      if (deletes.isNotEmpty) keys.deletes: deletes,
+      if (removes.isNotEmpty) keys.removes: removes,
+      if (!editedAt.isEmpty) keys.editedAt: editedAt,
+      if (reactions.isNotEmpty) keys.reactions: reactions,
+      if (replyId.isNotEmpty) keys.replyId: replyId,
+      if (isDeleted) keys.isDeleted: isDeleted,
+      if (isEdited) keys.isEdited: isEdited,
+      if (isForwarded) keys.isForwarded: isForwarded,
+      if (pins.isNotEmpty) keys.pins: pins,
+      if (extra.isNotEmpty) keys.extra: extra,
     };
   }
 
@@ -644,9 +675,10 @@ class AudioMessage extends Message {
   @override
   AudioMessage resolveWith(Map changes) {
     final msg = super.resolveWith(changes);
-    final durationInSec = changes[MessageKeys.durationInSec];
-    final url = changes[MessageKeys.url];
-    final waveform = changes[MessageKeys.waveform];
+    final keys = MessageKeys.i;
+    final durationInSec = changes[keys.durationInSec];
+    final url = changes[keys.url];
+    final waveform = changes[keys.waveform];
     final mWaveform = waveform is String ? jsonDecode(waveform) : null;
     return AudioMessage.from(
       msg,
@@ -662,11 +694,12 @@ class AudioMessage extends Message {
 
   @override
   Map<String, dynamic> get source {
+    final keys = MessageKeys.i;
     return {
       ...super.source,
-      if (durationInSec > 0) MessageKeys.durationInSec: durationInSec,
-      if (url.isNotEmpty) MessageKeys.url: url,
-      if (waveform.isNotEmpty) MessageKeys.waveform: jsonEncode(waveform),
+      if (durationInSec > 0) keys.durationInSec: durationInSec,
+      if (url.isNotEmpty) keys.url: url,
+      if (waveform.isNotEmpty) keys.waveform: jsonEncode(waveform),
     };
   }
 
@@ -800,8 +833,9 @@ class CustomMessage extends Message {
   @override
   CustomMessage resolveWith(Map changes) {
     final msg = super.resolveWith(changes);
-    final data = changes[MessageKeys.data];
-    final kind = changes[MessageKeys.kind];
+    final keys = MessageKeys.i;
+    final data = changes[keys.data];
+    final kind = changes[keys.kind];
     return CustomMessage.from(
       msg,
       data is Map && data.isNotEmpty ? data : this.data,
@@ -811,10 +845,11 @@ class CustomMessage extends Message {
 
   @override
   Map<String, dynamic> get source {
+    final keys = MessageKeys.i;
     return {
       ...super.source,
-      if (data.isNotEmpty) MessageKeys.data: data,
-      if (kind.isNotEmpty) MessageKeys.kind: kind,
+      if (data.isNotEmpty) keys.data: data,
+      if (kind.isNotEmpty) keys.kind: kind,
     };
   }
 
@@ -948,8 +983,9 @@ class ImageMessage extends Message {
   @override
   ImageMessage resolveWith(Map changes) {
     final msg = super.resolveWith(changes);
-    final caption = changes[MessageKeys.content];
-    final urls = changes[MessageKeys.urls];
+    final keys = MessageKeys.i;
+    final caption = changes[keys.content];
+    final urls = changes[keys.urls];
     return ImageMessage.from(
       msg,
       caption is String && caption.isNotEmpty ? caption : this.caption,
@@ -961,10 +997,11 @@ class ImageMessage extends Message {
 
   @override
   Map<String, dynamic> get source {
+    final keys = MessageKeys.i;
     return {
       ...super.source,
-      if (caption != null && caption!.isNotEmpty) MessageKeys.content: caption,
-      if (urls.isNotEmpty) MessageKeys.urls: urls,
+      if (caption != null && caption!.isNotEmpty) keys.content: caption,
+      if (urls.isNotEmpty) keys.urls: urls,
     };
   }
 
@@ -1092,7 +1129,8 @@ class LinkMessage extends Message {
   @override
   LinkMessage resolveWith(Map changes) {
     final msg = super.resolveWith(changes);
-    final link = changes[MessageKeys.content];
+    final keys = MessageKeys.i;
+    final link = changes[keys.content];
     return LinkMessage.from(
       msg,
       link is String && link.isNotEmpty ? link : this.link,
@@ -1101,7 +1139,8 @@ class LinkMessage extends Message {
 
   @override
   Map<String, dynamic> get source {
-    return {...super.source, if (link.isNotEmpty) MessageKeys.content: link};
+    final keys = MessageKeys.i;
+    return {...super.source, if (link.isNotEmpty) keys.content: link};
   }
 
   @override
@@ -1228,7 +1267,8 @@ class TextMessage extends Message {
   @override
   TextMessage resolveWith(Map changes) {
     final msg = super.resolveWith(changes);
-    final text = changes[MessageKeys.content];
+    final keys = MessageKeys.i;
+    final text = changes[keys.content];
     return TextMessage.from(
       msg,
       text is String && text.isNotEmpty ? text : this.text,
@@ -1237,7 +1277,8 @@ class TextMessage extends Message {
 
   @override
   Map<String, dynamic> get source {
-    return {...super.source, if (text.isNotEmpty) MessageKeys.content: text};
+    final keys = MessageKeys.i;
+    return {...super.source, if (text.isNotEmpty) keys.content: text};
   }
 
   @override
@@ -1396,10 +1437,11 @@ class VideoMessage extends Message {
   @override
   VideoMessage resolveWith(Map changes) {
     final msg = super.resolveWith(changes);
-    final caption = changes[MessageKeys.content];
-    final durationInSec = changes[MessageKeys.durationInSec];
-    final thumbnail = changes[MessageKeys.thumbnail];
-    final url = changes[MessageKeys.url];
+    final keys = MessageKeys.i;
+    final caption = changes[keys.content];
+    final durationInSec = changes[keys.durationInSec];
+    final thumbnail = changes[keys.thumbnail];
+    final url = changes[keys.url];
     return VideoMessage.from(
       msg,
       caption is String && caption.isNotEmpty ? caption : this.caption,
@@ -1413,12 +1455,13 @@ class VideoMessage extends Message {
 
   @override
   Map<String, dynamic> get source {
+    final keys = MessageKeys.i;
     return {
       ...super.source,
-      if (caption != null && caption!.isNotEmpty) MessageKeys.content: caption,
-      if (durationInSec > 0) MessageKeys.durationInSec: durationInSec,
-      if (thumbnail.isNotEmpty) MessageKeys.thumbnail: thumbnail,
-      if (url.isNotEmpty) MessageKeys.url: url,
+      if (caption != null && caption!.isNotEmpty) keys.content: caption,
+      if (durationInSec > 0) keys.durationInSec: durationInSec,
+      if (thumbnail.isNotEmpty) keys.thumbnail: thumbnail,
+      if (url.isNotEmpty) keys.url: url,
     };
   }
 

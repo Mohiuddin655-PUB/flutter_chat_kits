@@ -3,10 +3,12 @@ import 'package:equatable/equatable.dart';
 import '../managers/room.dart';
 import 'profile.dart';
 
-final class TypingKeys {
-  const TypingKeys._();
+class TypingKeys {
+  final String roomId;
 
-  static const roomId = 'roomId';
+  static TypingKeys get i => RoomManager.i.modelConfigs.typingKeys;
+
+  const TypingKeys({this.roomId = 'roomId'});
 }
 
 class Typing extends Equatable {

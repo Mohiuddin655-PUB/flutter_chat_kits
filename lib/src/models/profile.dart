@@ -1,19 +1,30 @@
 import 'package:equatable/equatable.dart';
 
+import '../managers/room.dart';
 import '../utils/parser.dart';
 
 typedef ProfileExtra = Map<String, dynamic>;
 
-final class ProfileKeys {
-  const ProfileKeys._();
+class ProfileKeys {
+  final String id;
+  final String name;
+  final String photo;
+  final String platform;
+  final String token;
+  final String room;
+  final String extra;
 
-  static const id = 'id';
-  static const name = 'name';
-  static const photo = 'photo';
-  static const platform = 'platform';
-  static const token = 'token';
-  static const room = 'room';
-  static const extra = 'extra';
+  static ProfileKeys get i => RoomManager.i.modelConfigs.profileKeys;
+
+  const ProfileKeys({
+    this.id = 'profile_id',
+    this.name = 'display_name',
+    this.photo = 'display_photo',
+    this.platform = 'platform',
+    this.token = 'device_token',
+    this.room = 'active_room',
+    this.extra = 'profile_extra',
+  });
 }
 
 class Profile extends Equatable {
@@ -55,13 +66,14 @@ class Profile extends Equatable {
   factory Profile.parse(Object? source, {ProfileExtra? extra}) {
     if (source is Profile) return source;
     if (source is! Map) return Profile.empty();
-    final ex = source[ProfileKeys.extra];
-    final id = source[ProfileKeys.id];
-    final name = source[ProfileKeys.name];
-    final photo = source[ProfileKeys.photo];
-    final platform = source[ProfileKeys.platform];
-    final room = source[ProfileKeys.room];
-    final token = source[ProfileKeys.token];
+    final keys = ProfileKeys.i;
+    final ex = source[keys.extra];
+    final id = source[keys.id];
+    final name = source[keys.name];
+    final photo = source[keys.photo];
+    final platform = source[keys.platform];
+    final room = source[keys.room];
+    final token = source[keys.token];
     return Profile(
       extra: extra ?? (ex is Map ? ex.parse() : {}),
       id: id is String && id.isNotEmpty ? id : '',
@@ -74,14 +86,15 @@ class Profile extends Equatable {
   }
 
   Map<String, dynamic> get source {
+    final keys = ProfileKeys.i;
     return {
-      if (id.isNotEmpty) ProfileKeys.id: id,
-      if ((name ?? '').isNotEmpty) ProfileKeys.name: name,
-      if ((photo ?? '').isNotEmpty) ProfileKeys.photo: photo,
-      if (platform.isNotEmpty) ProfileKeys.platform: platform,
-      if ((room ?? '').isNotEmpty) ProfileKeys.room: room,
-      if (token.isNotEmpty) ProfileKeys.token: token,
-      if (extra.isNotEmpty) ProfileKeys.extra: extra,
+      if (id.isNotEmpty) keys.id: id,
+      if ((name ?? '').isNotEmpty) keys.name: name,
+      if ((photo ?? '').isNotEmpty) keys.photo: photo,
+      if (platform.isNotEmpty) keys.platform: platform,
+      if ((room ?? '').isNotEmpty) keys.room: room,
+      if (token.isNotEmpty) keys.token: token,
+      if (extra.isNotEmpty) keys.extra: extra,
     };
   }
 

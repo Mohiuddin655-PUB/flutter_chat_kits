@@ -7,33 +7,60 @@ import 'message.dart';
 
 typedef RoomExtra = Map<String, dynamic>;
 
-final class RoomKeys {
-  const RoomKeys._();
+class RoomKeys {
+  final String id;
+  final String friendId;
+  final String participants;
+  final String leaves;
+  final String createdAt;
+  final String createdBy;
+  final String name;
+  final String photo;
+  final String isGroup;
+  final String isDeleted;
+  final String lastMessage;
+  final String lastMessageId;
+  final String lastMessageSenderId;
+  final String lastMessageDeleted;
+  final String lastMessageStatuses;
+  final String unseenCount;
+  final String updatedAt;
+  final String mutes;
+  final String archives;
+  final String blocks;
+  final String pins;
+  final String removes;
+  final String restricts;
+  final String extra;
 
-  static const id = 'id';
-  static const friendId = 'friendId';
-  static const participants = 'participants';
-  static const leaves = 'leaves';
-  static const createdAt = 'createdAt';
-  static const createdBy = 'createdBy';
-  static const name = 'name';
-  static const photo = 'photo';
-  static const isGroup = 'isGroup';
-  static const isDeleted = 'isDeleted';
-  static const lastMessage = 'lastMessage';
-  static const lastMessageId = 'lastMessageId';
-  static const lastMessageSenderId = 'lastMessageSenderId';
-  static const lastMessageDeleted = 'lastMessageDeletedForEveryone';
-  static const lastMessageStatuses = 'lastMessageStatuses';
-  static const unseenCount = 'unseenCount';
-  static const updatedAt = 'updatedAt';
-  static const mutes = 'mutes';
-  static const archives = 'archives';
-  static const blocks = 'blocks';
-  static const pins = 'pins';
-  static const removes = 'removes';
-  static const restricts = 'restricts';
-  static const extra = 'extra';
+  static RoomKeys get i => RoomManager.i.modelConfigs.roomKeys;
+
+  const RoomKeys({
+    this.id = 'id',
+    this.friendId = 'friendId',
+    this.participants = 'participants',
+    this.leaves = 'leaves',
+    this.createdAt = 'createdAt',
+    this.createdBy = 'createdBy',
+    this.name = 'name',
+    this.photo = 'photo',
+    this.isGroup = 'isGroup',
+    this.isDeleted = 'isDeleted',
+    this.lastMessage = 'lastMessage',
+    this.lastMessageId = 'lastMessageId',
+    this.lastMessageSenderId = 'lastMessageSenderId',
+    this.lastMessageDeleted = 'lastMessageDeleted',
+    this.lastMessageStatuses = 'lastMessageStatuses',
+    this.unseenCount = 'unseenCount',
+    this.updatedAt = 'updatedAt',
+    this.mutes = 'mutes',
+    this.archives = 'archives',
+    this.blocks = 'blocks',
+    this.pins = 'pins',
+    this.removes = 'removes',
+    this.restricts = 'restricts',
+    this.extra = 'extra',
+  });
 }
 
 class Room extends Equatable {
@@ -154,29 +181,30 @@ class Room extends Equatable {
   factory Room.parse(Object? source, {RoomExtra? extra}) {
     if (source is Room) return source;
     if (source is! Map) return Room.empty();
-    final isGroup = source[RoomKeys.isGroup];
+    final keys = RoomKeys.i;
+    final isGroup = source[keys.isGroup];
     if (isGroup is! bool) return Room.empty();
 
-    final archives = source[RoomKeys.archives];
-    final blocks = source[RoomKeys.blocks];
-    final createdAt = source[RoomKeys.createdAt];
-    final createdBy = source[RoomKeys.createdBy];
-    final ex = source[RoomKeys.extra];
-    final id = source[RoomKeys.id];
-    final isDeleted = source[RoomKeys.isDeleted];
-    final lastMessage = source[RoomKeys.lastMessage];
-    final lastMessageDeleted = source[RoomKeys.lastMessageDeleted];
-    final lastMessageId = source[RoomKeys.lastMessageId];
-    final lastMessageSenderId = source[RoomKeys.lastMessageSenderId];
-    final lastMessageStatuses = source[RoomKeys.lastMessageStatuses];
-    final leaves = source[RoomKeys.leaves];
-    final mutes = source[RoomKeys.mutes];
-    final participants = source[RoomKeys.participants];
-    final pins = source[RoomKeys.pins];
-    final removes = source[RoomKeys.removes];
-    final restricts = source[RoomKeys.restricts];
-    final unseenCount = source[RoomKeys.unseenCount];
-    final updatedAt = source[RoomKeys.updatedAt];
+    final archives = source[keys.archives];
+    final blocks = source[keys.blocks];
+    final createdAt = source[keys.createdAt];
+    final createdBy = source[keys.createdBy];
+    final ex = source[keys.extra];
+    final id = source[keys.id];
+    final isDeleted = source[keys.isDeleted];
+    final lastMessage = source[keys.lastMessage];
+    final lastMessageDeleted = source[keys.lastMessageDeleted];
+    final lastMessageId = source[keys.lastMessageId];
+    final lastMessageSenderId = source[keys.lastMessageSenderId];
+    final lastMessageStatuses = source[keys.lastMessageStatuses];
+    final leaves = source[keys.leaves];
+    final mutes = source[keys.mutes];
+    final participants = source[keys.participants];
+    final pins = source[keys.pins];
+    final removes = source[keys.removes];
+    final restricts = source[keys.restricts];
+    final unseenCount = source[keys.unseenCount];
+    final updatedAt = source[keys.updatedAt];
 
     final room = Room(
       isLocal: false,
@@ -211,8 +239,8 @@ class Room extends Equatable {
     );
 
     if (isGroup) {
-      final name = source[RoomKeys.name];
-      final photo = source[RoomKeys.photo];
+      final name = source[keys.name];
+      final photo = source[keys.photo];
       return GroupRoom.from(
         room,
         name: name is String && name.isNotEmpty ? name : null,
@@ -352,32 +380,33 @@ class Room extends Equatable {
   }
 
   Map<String, dynamic> get source {
+    final keys = RoomKeys.i;
     return {
-      if (archives.isNotEmpty) RoomKeys.archives: archives.toList(),
-      if (blocks.isNotEmpty) RoomKeys.blocks: blocks.toList(),
-      if (!createdAt.isEmpty) RoomKeys.createdAt: createdAt,
-      if (createdBy.isNotEmpty) RoomKeys.createdBy: createdBy,
-      if (id.isNotEmpty) RoomKeys.id: id,
-      if (isDeleted) RoomKeys.isDeleted: isDeleted,
-      if (isGroup) RoomKeys.isGroup: isGroup,
-      if ((lastMessage ?? '').isNotEmpty) RoomKeys.lastMessage: lastMessage,
-      if (lastMessageDeleted) RoomKeys.lastMessageDeleted: lastMessageDeleted,
-      if (lastMessageId.isNotEmpty) RoomKeys.lastMessageId: lastMessageId,
+      if (archives.isNotEmpty) keys.archives: archives.toList(),
+      if (blocks.isNotEmpty) keys.blocks: blocks.toList(),
+      if (!createdAt.isEmpty) keys.createdAt: createdAt,
+      if (createdBy.isNotEmpty) keys.createdBy: createdBy,
+      if (id.isNotEmpty) keys.id: id,
+      if (isDeleted) keys.isDeleted: isDeleted,
+      if (isGroup) keys.isGroup: isGroup,
+      if ((lastMessage ?? '').isNotEmpty) keys.lastMessage: lastMessage,
+      if (lastMessageDeleted) keys.lastMessageDeleted: lastMessageDeleted,
+      if (lastMessageId.isNotEmpty) keys.lastMessageId: lastMessageId,
       if (lastMessageSenderId.isNotEmpty)
-        RoomKeys.lastMessageSenderId: lastMessageSenderId,
+        keys.lastMessageSenderId: lastMessageSenderId,
       if (lastMessageStatuses.isNotEmpty)
-        RoomKeys.lastMessageStatuses: lastMessageStatuses.map((k, v) {
+        keys.lastMessageStatuses: lastMessageStatuses.map((k, v) {
           return MapEntry(k, v.name);
         }),
-      if (leaves.isNotEmpty) RoomKeys.leaves: leaves.toList(),
-      if (mutes.isNotEmpty) RoomKeys.mutes: mutes.toList(),
-      if (participants.isNotEmpty) RoomKeys.participants: participants.toList(),
-      if (pins.isNotEmpty) RoomKeys.pins: pins.toList(),
-      if (removes.isNotEmpty) RoomKeys.removes: removes,
-      if (restricts.isNotEmpty) RoomKeys.restricts: restricts.toList(),
-      if (_unseenCount.isNotEmpty) RoomKeys.unseenCount: _unseenCount,
-      if (!updatedAt.isEmpty) RoomKeys.updatedAt: updatedAt,
-      if (extra.isNotEmpty) RoomKeys.extra: extra,
+      if (leaves.isNotEmpty) keys.leaves: leaves.toList(),
+      if (mutes.isNotEmpty) keys.mutes: mutes.toList(),
+      if (participants.isNotEmpty) keys.participants: participants.toList(),
+      if (pins.isNotEmpty) keys.pins: pins.toList(),
+      if (removes.isNotEmpty) keys.removes: removes,
+      if (restricts.isNotEmpty) keys.restricts: restricts.toList(),
+      if (_unseenCount.isNotEmpty) keys.unseenCount: _unseenCount,
+      if (!updatedAt.isEmpty) keys.updatedAt: updatedAt,
+      if (extra.isNotEmpty) keys.extra: extra,
     };
   }
 
@@ -651,10 +680,11 @@ class GroupRoom extends Room {
 
   @override
   Map<String, dynamic> get source {
+    final keys = RoomKeys.i;
     return {
       ...super.source,
-      if ((name ?? '').isNotEmpty) RoomKeys.name: name,
-      if ((photo ?? '').isNotEmpty) RoomKeys.photo: photo,
+      if ((name ?? '').isNotEmpty) keys.name: name,
+      if ((photo ?? '').isNotEmpty) keys.photo: photo,
     };
   }
 

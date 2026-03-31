@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.17] - 2026-03-31
+
+- RoomManager improved
+- Verify to send Push Notification
+- Customizable every model keys
+
 ## [1.0.16] - 2026-03-31
 
 ## [1.0.15] - 2026-03-013

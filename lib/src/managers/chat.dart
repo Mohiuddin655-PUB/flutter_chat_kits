@@ -168,7 +168,7 @@ class ChatManager extends BaseNotifier {
     if (msg.isSending) return;
     put(msg.copyWith(react: react));
     final status = await RoomManager.i.updateMessage(msg.roomId, msg.id, {
-      "${MessageKeys.reactions}.$me":
+      "${MessageKeys.i.reactions}.$me":
           (react ?? '').isEmpty ? ChatValueDelete() : react,
     });
     if (status) return;
@@ -179,7 +179,7 @@ class ChatManager extends BaseNotifier {
     if (msg.isSending) return;
     put(msg.copyWith(isPinned: true));
     final status = await RoomManager.i.updateMessage(msg.roomId, msg.id, {
-      "${MessageKeys.pins}.$me": true,
+      "${MessageKeys.i.pins}.$me": true,
     });
     if (status) return;
     put(msg.copyWith(isPinned: false));
@@ -189,7 +189,7 @@ class ChatManager extends BaseNotifier {
     if (msg.isSending) return;
     put(msg.copyWith(isPinned: false));
     final status = await RoomManager.i.updateMessage(msg.roomId, msg.id, {
-      "${MessageKeys.pins}.$me": ChatValueDelete(),
+      "${MessageKeys.i.pins}.$me": ChatValueDelete(),
     });
     if (status) return;
     put(msg.copyWith(isPinned: true));
@@ -209,12 +209,12 @@ class ChatManager extends BaseNotifier {
     final status = await RoomManager.i.updateMessage(
       msg.roomId,
       msg.id,
-      {MessageKeys.isDeleted: true},
+      {MessageKeys.i.isDeleted: true},
       roomValues: {
         if (room.lastMessageId == msg.id) ...{
-          RoomKeys.lastMessage: msg.lastMessage(deleted: true),
-          RoomKeys.lastMessageSenderId: me,
-          RoomKeys.lastMessageDeleted: true,
+          RoomKeys.i.lastMessage: msg.lastMessage(deleted: true),
+          RoomKeys.i.lastMessageSenderId: me,
+          RoomKeys.i.lastMessageDeleted: true,
         },
       },
     );
@@ -238,7 +238,7 @@ class ChatManager extends BaseNotifier {
     if (msg.isSending) return;
     put(msg.copyWith(isDeletedForMe: true));
     final status = await RoomManager.i.updateMessage(msg.roomId, msg.id, {
-      "${MessageKeys.deletes}.$me": true,
+      "${MessageKeys.i.deletes}.$me": true,
     });
     if (status) return;
     put(msg.copyWith(isDeletedForMe: false));
@@ -259,7 +259,7 @@ class ChatManager extends BaseNotifier {
     if (current.isEmpty) return;
     puts(current.map((e) => e.copyWith(isDeletedForMe: true)));
     final entries = current.map((e) {
-      final update = {"${MessageKeys.deletes}.$me": true};
+      final update = {"${MessageKeys.i.deletes}.$me": true};
       return MapEntry(e.id, update);
     });
     final v = await RoomManager.i.updateMessages(
@@ -283,7 +283,7 @@ class ChatManager extends BaseNotifier {
       put(msg);
     } else {
       final status = await RoomManager.i.updateMessage(msg.roomId, msg.id, {
-        "${MessageKeys.removes}.$me": true,
+        "${MessageKeys.i.removes}.$me": true,
       });
       if (status) return;
       put(msg);
@@ -298,7 +298,10 @@ class ChatManager extends BaseNotifier {
     OnDeniedToSendNotification? onDeniedToSendNotification,
   }) async {
     if (room.isLocal) {
-      final global = await RoomManager.i.createOrGetRoom(room);
+      final global = await RoomManager.i.createOrGetRoom(
+        room,
+        verifyToSendNotification: (a, b) => false,
+      );
       if (global.isEmpty) return;
       room = global;
       notify();
@@ -338,13 +341,13 @@ class ChatManager extends BaseNotifier {
       roomId,
       msg.id,
       {
-        MessageKeys.isEdited: true,
-        MessageKeys.content: content,
-        MessageKeys.editedAt: ChatValueTimestamp.now(),
+        MessageKeys.i.isEdited: true,
+        MessageKeys.i.content: content,
+        MessageKeys.i.editedAt: ChatValueTimestamp.now(),
       },
       roomValues: {
         if (room.lastMessageId == msg.id) ...{
-          RoomKeys.lastMessage: updatedMsg.lastMessage(),
+          RoomKeys.i.lastMessage: updatedMsg.lastMessage(),
         },
       },
     );
@@ -376,7 +379,7 @@ class ChatManager extends BaseNotifier {
     if (msg.isSeenByMe) return;
     put(msg.copyWith(status: MessageStatus.seen));
     final status = await RoomManager.i.updateMessage(msg.roomId, msg.id, {
-      "${MessageKeys.statuses}.$me": MessageStatus.seen.name,
+      "${MessageKeys.i.statuses}.$me": MessageStatus.seen.name,
     });
     if (status) return;
     put(msg);
@@ -388,7 +391,7 @@ class ChatManager extends BaseNotifier {
     puts(current.map((e) => e.copyWith(status: MessageStatus.delivered)));
     final entries = current.map((e) {
       final update = {
-        "${MessageKeys.statuses}.$me": MessageStatus.delivered.name,
+        "${MessageKeys.i.statuses}.$me": MessageStatus.delivered.name,
       };
       return MapEntry(e.id, update);
     });

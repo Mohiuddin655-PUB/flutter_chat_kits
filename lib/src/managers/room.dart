@@ -19,6 +19,7 @@ import '../models/typing.dart';
 import '../utils/chat_helper.dart';
 import '../utils/chat_ui.dart';
 import '../utils/field_value.dart';
+import '../utils/model_configs.dart';
 import 'base.dart';
 import 'chat.dart';
 
@@ -36,6 +37,8 @@ class RoomManager extends BaseNotifier {
   final ChatTypingDelegate _typing;
   final ChatProfileDelegate _profile;
   final ChatNotificationDelegate _notification;
+
+  final ChatModelConfigs modelConfigs;
   final ChatUiConfigs uiConfigs;
 
   RoomManager._(
@@ -49,6 +52,7 @@ class RoomManager extends BaseNotifier {
     this._profile,
     this._notification,
     this._n,
+    this.modelConfigs,
     this.uiConfigs,
   );
 
@@ -67,6 +71,7 @@ class RoomManager extends BaseNotifier {
     required ChatProfileDelegate profile,
     required ChatNotificationDelegate notification,
     required ChatFieldValueNormalizer normalizer,
+    ChatModelConfigs modelConfigs = const ChatModelConfigs(),
     required ChatUiConfigs uiConfigs,
   }) async {
     _i = RoomManager._(
@@ -80,6 +85,7 @@ class RoomManager extends BaseNotifier {
       profile,
       notification,
       normalizer,
+      modelConfigs,
       uiConfigs,
     );
   }
@@ -310,6 +316,44 @@ class RoomManager extends BaseNotifier {
     });
   }
 
+  Future<void> pushNotification({
+    required String roomId,
+    required String msgId,
+    required String title,
+    required String body,
+    VerifyToSendNotification? verifyToSend,
+    OnDeniedToSendNotification? onDeniedToSend,
+  }) async {
+    if (me.isEmpty) return;
+    try {
+      final room = this.room(roomId);
+      for (final participant in room.participants) {
+        if (participant == me) continue;
+        final isMuted = room.mutes.contains(participant);
+        if (isMuted) continue;
+        final receiver = profileFor(participant);
+        if (receiver.isEmpty) continue;
+        final isActiveRoom = receiver.isActiveRoom(roomId);
+        if (isActiveRoom) continue;
+        if (verifyToSend != null) {
+          if (!verifyToSend(room, receiver)) {
+            onDeniedToSend?.call(room, receiver);
+            return;
+          }
+        }
+        final content = ChatNotificationContent(
+          id: msgId,
+          roomId: roomId,
+          title: title,
+          body: body,
+          token: receiver.token,
+          platform: receiver.platform,
+        );
+        _notification.send(content);
+      }
+    } catch (_) {}
+  }
+
   void _dispose() {
     _roomSubscription?.cancel();
     _cancelAllMetadata();
@@ -472,7 +516,13 @@ class RoomManager extends BaseNotifier {
     }
   }
 
-  Future<Room> createOrGetRoom(Room room) async {
+  Future<Room> createOrGetRoom(
+    Room room, {
+    String? notificationTitle,
+    String? notificationBody,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
+  }) async {
     try {
       if (!isConnected || !isActive || isPaused) return Room.empty();
       if (me.isEmpty) return Room.empty();
@@ -487,10 +537,21 @@ class RoomManager extends BaseNotifier {
       participants.sort();
       if (participants.length < 2) return Room.empty();
       final source = {...room.source};
-      source[RoomKeys.participants] = participants;
+      source[RoomKeys.i.participants] = participants;
       final creates = _n.normalize(source, _n.room);
       await _room.create(room.id, creates);
       resetToken();
+      if (!room.isEmpty) {
+        put(room.copyWith(isLocal: false));
+        pushNotification(
+          roomId: room.id,
+          msgId: me,
+          title: notificationTitle ?? profileFor(me).name ?? "Match!",
+          body: notificationBody ?? "New matched",
+          verifyToSend: verifyToSendNotification,
+          onDeniedToSend: onDeniedToSendNotification,
+        );
+      }
       return room.copyWith(isLocal: false);
     } catch (_) {
       return Room.empty();
@@ -500,6 +561,10 @@ class RoomManager extends BaseNotifier {
   Future<Room> createOrGetThread(
     List<String> participants, {
     RoomExtra? extra,
+    String? notificationTitle,
+    String? notificationBody,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
   }) async {
     try {
       if (!isConnected || !isActive || isPaused) return Room.empty();
@@ -517,17 +582,29 @@ class RoomManager extends BaseNotifier {
         return old;
       }
       final creates = _n.normalize({
-        RoomKeys.isGroup: false,
-        RoomKeys.id: id,
-        RoomKeys.createdAt: ChatValueTimestamp(),
-        RoomKeys.updatedAt: ChatValueTimestamp(),
-        RoomKeys.createdBy: me,
-        RoomKeys.participants: participants,
-        if (extra != null && extra.isNotEmpty) RoomKeys.extra: extra,
+        RoomKeys.i.isGroup: false,
+        RoomKeys.i.id: id,
+        RoomKeys.i.createdAt: ChatValueTimestamp(),
+        RoomKeys.i.updatedAt: ChatValueTimestamp(),
+        RoomKeys.i.createdBy: me,
+        RoomKeys.i.participants: participants,
+        if (extra != null && extra.isNotEmpty) RoomKeys.i.extra: extra,
       }, _n.room);
       await _room.create(id, creates);
       resetToken();
-      return _room.get(id);
+      final room = await _room.get(id);
+      if (!room.isEmpty) {
+        put(room);
+        pushNotification(
+          roomId: room.id,
+          msgId: me,
+          title: notificationTitle ?? profileFor(me).name ?? "Created!",
+          body: notificationBody ?? "Newly room created",
+          verifyToSend: verifyToSendNotification,
+          onDeniedToSend: onDeniedToSendNotification,
+        );
+      }
+      return room;
     } catch (_) {
       return Room.empty();
     }
@@ -538,6 +615,10 @@ class RoomManager extends BaseNotifier {
     String? id,
     List<String>? participants,
     RoomExtra? extra,
+    String? notificationTitle,
+    String? notificationBody,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
   }) async {
     try {
       if (!isConnected || !isActive || isPaused) return Room.empty();
@@ -553,17 +634,29 @@ class RoomManager extends BaseNotifier {
         return old;
       }
       final creates = _n.normalize({
-        RoomKeys.isGroup: true,
-        RoomKeys.id: id,
-        RoomKeys.createdAt: ChatValueTimestamp(),
-        RoomKeys.updatedAt: ChatValueTimestamp(),
-        RoomKeys.createdBy: me,
-        RoomKeys.participants: participants.toSet().toList(),
-        if (extra != null && extra.isNotEmpty) RoomKeys.extra: extra,
+        RoomKeys.i.isGroup: true,
+        RoomKeys.i.id: id,
+        RoomKeys.i.createdAt: ChatValueTimestamp(),
+        RoomKeys.i.updatedAt: ChatValueTimestamp(),
+        RoomKeys.i.createdBy: me,
+        RoomKeys.i.participants: participants.toSet().toList(),
+        if (extra != null && extra.isNotEmpty) RoomKeys.i.extra: extra,
       }, _n.room);
       await _room.create(id, creates);
       resetToken();
-      return _room.get(id);
+      final room = await _room.get(id);
+      if (!room.isEmpty) {
+        put(room);
+        pushNotification(
+          roomId: room.id,
+          msgId: me,
+          title: notificationTitle ?? name,
+          body: notificationBody ?? "Newly group created",
+          verifyToSend: verifyToSendNotification,
+          onDeniedToSend: onDeniedToSendNotification,
+        );
+      }
+      return room;
     } catch (_) {
       return Room.empty();
     }
@@ -580,7 +673,7 @@ class RoomManager extends BaseNotifier {
     if (me.isEmpty) return;
     try {
       await _room.update(roomId, {
-        RoomKeys.extra: _n.normalize(extra, _n.room),
+        RoomKeys.i.extra: _n.normalize(extra, _n.room),
       });
     } catch (_) {}
   }
@@ -597,7 +690,7 @@ class RoomManager extends BaseNotifier {
     if (me.isEmpty) return;
     try {
       await _profile.update(uid, {
-        RoomKeys.extra: _n.normalize(extra, _n.profile),
+        RoomKeys.i.extra: _n.normalize(extra, _n.profile),
       });
     } catch (_) {}
   }
@@ -625,7 +718,10 @@ class RoomManager extends BaseNotifier {
     OnDeniedToSendNotification? onDeniedToSendNotification,
   }) async {
     try {
-      final room = await createOrGetThread([friendId]);
+      final room = await createOrGetThread(
+        [friendId],
+        verifyToSendNotification: (a, b) => false,
+      );
       if (room.isEmpty) return;
       if (verifyToSend != null) {
         if (!verifyToSend(room)) {
@@ -656,7 +752,7 @@ class RoomManager extends BaseNotifier {
   Future<void> markAsActive(String? roomId) async {
     if (me.isEmpty) return;
     final normalized = _n.normalize({
-      ProfileKeys.room: (roomId ?? '').isEmpty ? ChatValueDelete() : roomId,
+      ProfileKeys.i.room: (roomId ?? '').isEmpty ? ChatValueDelete() : roomId,
     }, _n.profile);
     return _profile.update(me, normalized);
   }
@@ -669,8 +765,8 @@ class RoomManager extends BaseNotifier {
     if (me.isEmpty) return;
     try {
       final normalized = _n.normalize({
-        StatusKeys.isOnline: status ? true : ChatValueDelete(),
-        StatusKeys.lastSeen: ChatValueTimestamp(),
+        StatusKeys.i.isOnline: status ? true : ChatValueDelete(),
+        StatusKeys.i.lastSeen: ChatValueTimestamp(),
       }, _n.status);
       if (status) {
         await _status.online(me, normalized);
@@ -708,8 +804,8 @@ class RoomManager extends BaseNotifier {
     put(room.copyWith(participants: filtered, isAddMember: true));
     try {
       final value = _n.normalize({
-        RoomKeys.leaves: ChatValueRemove([...filtered]),
-        RoomKeys.participants: ChatValueAdd([...filtered]),
+        RoomKeys.i.leaves: ChatValueRemove([...filtered]),
+        RoomKeys.i.participants: ChatValueAdd([...filtered]),
       }, _n.room);
       await _room.update(room.id, value);
     } catch (_) {
@@ -727,8 +823,8 @@ class RoomManager extends BaseNotifier {
     put(room.copyWith(participants: filtered, isAddMember: false));
     try {
       final value = _n.normalize({
-        RoomKeys.leaves: ChatValueAdd([...filtered]),
-        RoomKeys.participants: ChatValueRemove([...filtered]),
+        RoomKeys.i.leaves: ChatValueAdd([...filtered]),
+        RoomKeys.i.participants: ChatValueRemove([...filtered]),
       }, _n.room);
       await _room.update(room.id, value);
     } catch (_) {
@@ -742,7 +838,7 @@ class RoomManager extends BaseNotifier {
     put(room.copyWith(isArchived: true));
     try {
       final value = _n.normalize({
-        RoomKeys.archives: ChatValueAdd([me]),
+        RoomKeys.i.archives: ChatValueAdd([me]),
       }, _n.room);
       await _room.update(room.id, value);
     } catch (_) {
@@ -756,7 +852,7 @@ class RoomManager extends BaseNotifier {
     put(room.copyWith(isArchived: false));
     try {
       final value = _n.normalize({
-        RoomKeys.archives: ChatValueRemove([me]),
+        RoomKeys.i.archives: ChatValueRemove([me]),
       }, _n.room);
       await _room.update(room.id, value);
     } catch (_) {
@@ -769,7 +865,7 @@ class RoomManager extends BaseNotifier {
     put(room.copyWith(blocks: participants, isBlocked: true));
     try {
       final value = _n.normalize({
-        RoomKeys.blocks: ChatValueAdd([...participants]),
+        RoomKeys.i.blocks: ChatValueAdd([...participants]),
       }, _n.room);
       await _room.update(room.id, value);
     } catch (_) {
@@ -782,7 +878,7 @@ class RoomManager extends BaseNotifier {
     put(room.copyWith(blocks: participants, isBlocked: false));
     try {
       final value = _n.normalize({
-        RoomKeys.blocks: ChatValueRemove([...participants]),
+        RoomKeys.i.blocks: ChatValueRemove([...participants]),
       }, _n.room);
       await _room.update(room.id, value);
     } catch (_) {
@@ -795,9 +891,9 @@ class RoomManager extends BaseNotifier {
     put(room.copyWith(isLeaved: false));
     try {
       final value = _n.normalize({
-        if (room.isAdminByMe) RoomKeys.isDeleted: ChatValueDelete(),
-        RoomKeys.leaves: ChatValueRemove([me]),
-        RoomKeys.participants: ChatValueAdd([me]),
+        if (room.isAdminByMe) RoomKeys.i.isDeleted: ChatValueDelete(),
+        RoomKeys.i.leaves: ChatValueRemove([me]),
+        RoomKeys.i.participants: ChatValueAdd([me]),
       }, _n.room);
       await _room.update(room.id, value);
     } catch (_) {
@@ -811,9 +907,9 @@ class RoomManager extends BaseNotifier {
     pop(room.id);
     try {
       final value = _n.normalize({
-        if (room.isAdminByMe) RoomKeys.isDeleted: true,
-        RoomKeys.leaves: ChatValueAdd([me]),
-        RoomKeys.participants: ChatValueRemove([me]),
+        if (room.isAdminByMe) RoomKeys.i.isDeleted: true,
+        RoomKeys.i.leaves: ChatValueAdd([me]),
+        RoomKeys.i.participants: ChatValueRemove([me]),
       }, _n.room);
       await _room.update(room.id, value);
     } catch (_) {
@@ -827,7 +923,7 @@ class RoomManager extends BaseNotifier {
     put(room.copyWith(isMuted: true));
     try {
       final value = _n.normalize({
-        RoomKeys.mutes: ChatValueAdd([me]),
+        RoomKeys.i.mutes: ChatValueAdd([me]),
       }, _n.room);
       await _room.update(room.id, value);
     } catch (_) {
@@ -841,7 +937,7 @@ class RoomManager extends BaseNotifier {
     put(room.copyWith(isMuted: false));
     try {
       final value = _n.normalize({
-        RoomKeys.mutes: ChatValueRemove([me]),
+        RoomKeys.i.mutes: ChatValueRemove([me]),
       }, _n.room);
       await _room.update(room.id, value);
     } catch (_) {
@@ -855,7 +951,7 @@ class RoomManager extends BaseNotifier {
     pop(room.id);
     try {
       final value = _n.normalize({
-        "${RoomKeys.removes}.$me": room.lastMessageId,
+        "${RoomKeys.i.removes}.$me": room.lastMessageId,
       }, _n.room);
       await _room.update(room.id, value);
     } catch (_) {
@@ -868,7 +964,7 @@ class RoomManager extends BaseNotifier {
     put(room.copyWith(restricts: participants, isRestricted: true));
     try {
       final value = _n.normalize({
-        RoomKeys.restricts: ChatValueAdd([...participants]),
+        RoomKeys.i.restricts: ChatValueAdd([...participants]),
       }, _n.room);
       await _room.update(room.id, value);
     } catch (_) {
@@ -881,7 +977,7 @@ class RoomManager extends BaseNotifier {
     put(room.copyWith(restricts: participants, isRestricted: false));
     try {
       final value = _n.normalize({
-        RoomKeys.restricts: ChatValueRemove([...participants]),
+        RoomKeys.i.restricts: ChatValueRemove([...participants]),
       }, _n.room);
       await _room.update(room.id, value);
     } catch (_) {
@@ -895,7 +991,7 @@ class RoomManager extends BaseNotifier {
     put(room.copyWith(isPinned: true));
     try {
       final value = _n.normalize({
-        RoomKeys.pins: ChatValueAdd([me]),
+        RoomKeys.i.pins: ChatValueAdd([me]),
       }, _n.room);
       await _room.update(room.id, value);
     } catch (_) {
@@ -909,7 +1005,7 @@ class RoomManager extends BaseNotifier {
     put(room.copyWith(isPinned: false));
     try {
       final value = _n.normalize({
-        RoomKeys.pins: ChatValueRemove([me]),
+        RoomKeys.i.pins: ChatValueRemove([me]),
       }, _n.room);
       await _room.update(room.id, value);
     } catch (_) {
@@ -936,8 +1032,8 @@ class RoomManager extends BaseNotifier {
                                 : 'unknown';
     final token = await _notification.deviceToken();
     return _profile.update(me, {
-      ProfileKeys.platform: kPlatform,
-      ProfileKeys.token: token,
+      ProfileKeys.i.platform: kPlatform,
+      ProfileKeys.i.token: token,
     });
   }
 
@@ -945,7 +1041,7 @@ class RoomManager extends BaseNotifier {
     if (me.isEmpty) return;
     try {
       final updates = _n.normalize({
-        "${RoomKeys.unseenCount}.$me": ChatValueDelete(),
+        "${RoomKeys.i.unseenCount}.$me": ChatValueDelete(),
       }, _n.room);
       await _room.update(roomId, updates);
       notify();
@@ -958,34 +1054,15 @@ class RoomManager extends BaseNotifier {
     OnDeniedToSendNotification? onDeniedToSend,
   }) async {
     if (me.isEmpty) return;
-    try {
-      final room = this.room(msg.roomId);
-      final sender = profileFor(me);
-      for (final participant in room.participants) {
-        if (participant == me) continue;
-        final isMuted = room.mutes.contains(participant);
-        if (isMuted) continue;
-        final receiver = profileFor(participant);
-        if (receiver.isEmpty) continue;
-        final isActiveRoom = receiver.isActiveRoom(msg.roomId);
-        if (isActiveRoom) continue;
-        if (verifyToSend != null) {
-          if (!verifyToSend(room, receiver)) {
-            onDeniedToSend?.call(room, receiver);
-            return;
-          }
-        }
-        final content = ChatNotificationContent(
-          id: msg.id,
-          roomId: msg.roomId,
-          title: sender.name ?? "?",
-          body: msg.notificationBody(sender.name ?? "?"),
-          token: receiver.token,
-          platform: receiver.platform,
-        );
-        _notification.send(content);
-      }
-    } catch (_) {}
+    final sender = profileFor(me);
+    return pushNotification(
+      roomId: msg.roomId,
+      msgId: msg.id,
+      title: sender.name ?? "?",
+      body: msg.notificationBody(sender.name ?? "?"),
+      verifyToSend: verifyToSend,
+      onDeniedToSend: onDeniedToSend,
+    );
   }
 
   Future<bool> forward(List<String> targetRoomIds, Message msg) async {
@@ -1203,19 +1280,19 @@ class RoomManager extends BaseNotifier {
       );
       await _message.create(msg.roomId, msg.id, normalized);
       final normalizedRoom = _n.normalize({
-        RoomKeys.lastMessage: body,
-        RoomKeys.lastMessageId: msg.id,
-        RoomKeys.lastMessageSenderId: me,
-        RoomKeys.lastMessageDeleted: false,
-        RoomKeys.updatedAt: ChatValueTimestamp(),
-        RoomKeys.lastMessageStatuses: {
+        RoomKeys.i.lastMessage: body,
+        RoomKeys.i.lastMessageId: msg.id,
+        RoomKeys.i.lastMessageSenderId: me,
+        RoomKeys.i.lastMessageDeleted: false,
+        RoomKeys.i.updatedAt: ChatValueTimestamp(),
+        RoomKeys.i.lastMessageStatuses: {
           ...Map.fromEntries(
             room.participants.map((e) {
               return MapEntry(e, MessageStatus.sent.name);
             }),
           ),
         },
-        RoomKeys.unseenCount: {
+        RoomKeys.i.unseenCount: {
           ...Map.fromEntries(
             room.participants.map((e) {
               return MapEntry(e, ChatValueIncrement(1));
@@ -1311,7 +1388,7 @@ class RoomManager extends BaseNotifier {
     if (me.isEmpty) return;
     try {
       await _message.update(roomId, msgId, {
-        RoomKeys.extra: _n.normalize(extra, _n.message),
+        RoomKeys.i.extra: _n.normalize(extra, _n.message),
       });
     } catch (_) {}
   }
