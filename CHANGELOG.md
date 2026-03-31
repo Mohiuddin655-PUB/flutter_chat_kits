@@ -2,6 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.18] - 2026-03-31
 ## [1.0.17] - 2026-03-31
 
 - RoomManager improved
