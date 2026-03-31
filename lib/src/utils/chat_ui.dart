@@ -1,11 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import '../managers/chat.dart';
-import '../models/message.dart';
-import '../models/profile.dart';
-import '../models/room.dart';
-import '../models/status.dart';
-import '../models/typing.dart';
+import '../../flutter_chat_kits.dart';
 
 typedef ChatAppbarBuilder<T extends Typing> = Widget Function(
   BuildContext context,
@@ -89,25 +84,51 @@ class ChatInputConfigs {
   final void Function(
     String path, {
     Map<String, dynamic>? extra,
+    VerifyToSendMessage? verifyToSend,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendMessage? onDeniedToSend,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
   }) onCaptureImage;
-  final VoidCallback onSendText;
+  final void Function({
+    Map<String, dynamic>? extra,
+    VerifyToSendMessage? verifyToSend,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendMessage? onDeniedToSend,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
+  }) onSendText;
   final void Function(
     String path,
     int duration,
     List<double> waveform, {
     Map<String, dynamic>? extra,
+    VerifyToSendMessage? verifyToSend,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendMessage? onDeniedToSend,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
   }) onSendVoice;
   final void Function(
     List<String> paths, {
     Map<String, dynamic>? extra,
+    VerifyToSendMessage? verifyToSend,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendMessage? onDeniedToSend,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
   }) onSendImages;
   final void Function(
     String path, {
     Map<String, dynamic>? extra,
+    VerifyToSendMessage? verifyToSend,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendMessage? onDeniedToSend,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
   }) onCaptureVideo;
   final void Function(
     String path, {
     Map<String, dynamic>? extra,
+    VerifyToSendMessage? verifyToSend,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendMessage? onDeniedToSend,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
   }) onSendVideo;
 
   const ChatInputConfigs({

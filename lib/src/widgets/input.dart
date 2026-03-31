@@ -91,6 +91,10 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
 
   void _sendText({
     Map<String, dynamic>? extra,
+    VerifyToSendMessage? verifyToSend,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendMessage? onDeniedToSend,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
   }) {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
@@ -100,27 +104,47 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
       _isTyping = false;
       widget.manager.typing(false);
     }
-    widget.manager.send(TextMessage.create(text, extra: extra));
+    widget.manager.send(
+      TextMessage.create(text, extra: extra),
+      verifyToSend: verifyToSend,
+      verifyToSendNotification: verifyToSendNotification,
+      onDeniedToSend: onDeniedToSend,
+      onDeniedToSendNotification: onDeniedToSendNotification,
+    );
     _controller.clear();
   }
 
   Future<void> _sendImages(
     List<String> paths, {
     Map<String, dynamic>? extra,
+    VerifyToSendMessage? verifyToSend,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendMessage? onDeniedToSend,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
   }) async {
     if (paths.isEmpty) return;
     final text = _controller.text.trim();
-    widget.manager.send(ImageMessage.create(
-      paths,
-      caption: text.isEmpty ? null : text,
-      extra: extra,
-    ));
+    widget.manager.send(
+      ImageMessage.create(
+        paths,
+        caption: text.isEmpty ? null : text,
+        extra: extra,
+      ),
+      verifyToSend: verifyToSend,
+      verifyToSendNotification: verifyToSendNotification,
+      onDeniedToSend: onDeniedToSend,
+      onDeniedToSendNotification: onDeniedToSendNotification,
+    );
     if (text.isNotEmpty) _controller.clear();
   }
 
   Future<void> _sendCapturedImage(
     String path, {
     Map<String, dynamic>? extra,
+    VerifyToSendMessage? verifyToSend,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendMessage? onDeniedToSend,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
   }) async {
     if (path.isEmpty) return;
     final text = _controller.text.trim();
@@ -130,6 +154,10 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
         caption: text.isEmpty ? null : text,
         extra: extra,
       ),
+      verifyToSend: verifyToSend,
+      verifyToSendNotification: verifyToSendNotification,
+      onDeniedToSend: onDeniedToSend,
+      onDeniedToSendNotification: onDeniedToSendNotification,
     );
     if (text.isNotEmpty) _controller.clear();
   }
@@ -139,18 +167,32 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
     int duration,
     List<double> waveform, {
     Map<String, dynamic>? extra,
+    VerifyToSendMessage? verifyToSend,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendMessage? onDeniedToSend,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
   }) async {
-    widget.manager.send(AudioMessage.create(
-      path,
-      duration,
-      waveform,
-      extra: extra,
-    ));
+    widget.manager.send(
+      AudioMessage.create(
+        path,
+        duration,
+        waveform,
+        extra: extra,
+      ),
+      verifyToSend: verifyToSend,
+      verifyToSendNotification: verifyToSendNotification,
+      onDeniedToSend: onDeniedToSend,
+      onDeniedToSendNotification: onDeniedToSendNotification,
+    );
   }
 
   Future<void> _sendCapturedVideo(
     String path, {
     Map<String, dynamic>? extra,
+    VerifyToSendMessage? verifyToSend,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendMessage? onDeniedToSend,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
   }) async {
     if (i.onVideoDuration == null) return;
     if (i.onVideoThumbnail == null) return;
@@ -168,6 +210,10 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
         caption: text.isEmpty ? null : text,
         extra: extra,
       ),
+      verifyToSend: verifyToSend,
+      verifyToSendNotification: verifyToSendNotification,
+      onDeniedToSend: onDeniedToSend,
+      onDeniedToSendNotification: onDeniedToSendNotification,
     );
     if (text.isNotEmpty) _controller.clear();
   }
@@ -175,6 +221,10 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
   Future<void> _sendVideo(
     String path, {
     Map<String, dynamic>? extra,
+    VerifyToSendMessage? verifyToSend,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendMessage? onDeniedToSend,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
   }) async {
     if (i.onVideoDuration == null) return;
     if (i.onVideoThumbnail == null) return;
@@ -192,6 +242,10 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
         caption: text.isEmpty ? null : text,
         extra: extra,
       ),
+      verifyToSend: verifyToSend,
+      verifyToSendNotification: verifyToSendNotification,
+      onDeniedToSend: onDeniedToSend,
+      onDeniedToSendNotification: onDeniedToSendNotification,
     );
     if (text.isNotEmpty) _controller.clear();
   }

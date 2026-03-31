@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.16] - 2026-03-31
+
 ## [1.0.15] - 2026-03-013
 
 - Improve input bar callbacks to send also extra

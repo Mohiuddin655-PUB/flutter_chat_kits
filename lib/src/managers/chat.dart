@@ -290,7 +290,13 @@ class ChatManager extends BaseNotifier {
     }
   }
 
-  void send(Message message) async {
+  void send(
+    Message message, {
+    VerifyToSendMessage? verifyToSend,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendMessage? onDeniedToSend,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
+  }) async {
     if (room.isLocal) {
       final global = await RoomManager.i.createOrGetRoom(room);
       if (global.isEmpty) return;
@@ -299,9 +305,15 @@ class ChatManager extends BaseNotifier {
     }
     final msg = message.copyWith(roomId: roomId, replyId: replyMsg?.id);
     put(msg);
-    RoomManager.i.createMessage(msg).then((v) {
-      put(v);
-    });
+    RoomManager.i
+        .createMessage(
+          msg,
+          verifyToSend: verifyToSend,
+          verifyToSendNotification: verifyToSendNotification,
+          onDeniedToSend: onDeniedToSend,
+          onDeniedToSendNotification: onDeniedToSendNotification,
+        )
+        .then((v) => put(v));
   }
 
   void edit(Message msg, String content) async {

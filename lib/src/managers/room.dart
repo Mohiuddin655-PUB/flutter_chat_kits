@@ -22,6 +22,11 @@ import '../utils/field_value.dart';
 import 'base.dart';
 import 'chat.dart';
 
+typedef VerifyToSendMessage = bool Function(Room);
+typedef OnDeniedToSendMessage = void Function(Room);
+typedef VerifyToSendNotification = bool Function(Room, Profile);
+typedef OnDeniedToSendNotification = void Function(Room, Profile);
+
 class RoomManager extends BaseNotifier {
   final bool fetchGroupUserProfiles;
   final ChatFieldValueNormalizer _n;
@@ -614,11 +619,28 @@ class RoomManager extends BaseNotifier {
     String friendId,
     Message message, {
     BuildContext? roomOpeningContext,
+    VerifyToSendMessage? verifyToSend,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendMessage? onDeniedToSend,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
   }) async {
     try {
       final room = await createOrGetThread([friendId]);
       if (room.isEmpty) return;
-      final manager = _manager(room)..send(message);
+      if (verifyToSend != null) {
+        if (!verifyToSend(room)) {
+          onDeniedToSend?.call(room);
+          return;
+        }
+      }
+      final manager = _manager(room)
+        ..send(
+          message,
+          verifyToSend: verifyToSend,
+          verifyToSendNotification: verifyToSendNotification,
+          onDeniedToSend: onDeniedToSend,
+          onDeniedToSendNotification: onDeniedToSendNotification,
+        );
       if (roomOpeningContext != null && roomOpeningContext.mounted) {
         manager.connect();
         await uiConfigs.onChatStart(roomOpeningContext, manager);
@@ -930,7 +952,11 @@ class RoomManager extends BaseNotifier {
     } catch (_) {}
   }
 
-  Future<void> sendNotification(Message msg) async {
+  Future<void> sendNotification(
+    Message msg, {
+    VerifyToSendNotification? verifyToSend,
+    OnDeniedToSendNotification? onDeniedToSend,
+  }) async {
     if (me.isEmpty) return;
     try {
       final room = this.room(msg.roomId);
@@ -943,6 +969,12 @@ class RoomManager extends BaseNotifier {
         if (receiver.isEmpty) continue;
         final isActiveRoom = receiver.isActiveRoom(msg.roomId);
         if (isActiveRoom) continue;
+        if (verifyToSend != null) {
+          if (!verifyToSend(room, receiver)) {
+            onDeniedToSend?.call(room, receiver);
+            return;
+          }
+        }
         final content = ChatNotificationContent(
           id: msg.id,
           roomId: msg.roomId,
@@ -1137,12 +1169,22 @@ class RoomManager extends BaseNotifier {
     }
   }
 
-  Future<Message> createMessage(Message msg) async {
+  Future<Message> createMessage(
+    Message msg, {
+    VerifyToSendMessage? verifyToSend,
+    VerifyToSendNotification? verifyToSendNotification,
+    OnDeniedToSendMessage? onDeniedToSend,
+    OnDeniedToSendNotification? onDeniedToSendNotification,
+  }) async {
     if (me.isEmpty) return msg.copyWith(status: MessageStatus.failed);
     if (msg.isEmpty) return msg.copyWith(status: MessageStatus.failed);
-    final body = msg.lastMessage();
     final room = this.room(msg.roomId);
+    if (verifyToSend != null && !verifyToSend(room)) {
+      onDeniedToSend?.call(room);
+      return msg;
+    }
     try {
+      final body = msg.lastMessage();
       put(room.copyWith(
         lastMessage: body,
         lastMessageId: msg.id,
@@ -1182,7 +1224,11 @@ class RoomManager extends BaseNotifier {
         },
       }, _n.room);
       await _room.update(msg.roomId, normalizedRoom);
-      await sendNotification(msg);
+      await sendNotification(
+        msg,
+        verifyToSend: verifyToSendNotification,
+        onDeniedToSend: onDeniedToSendNotification,
+      );
       return replacedMsg.copyWith(status: MessageStatus.sent);
     } catch (_) {
       put(room);
