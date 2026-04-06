@@ -90,6 +90,7 @@ class ChatInputConfigs {
     OnDeniedToSendNotification? onDeniedToSendNotification,
   }) onCaptureImage;
   final void Function({
+    String? text,
     Map<String, dynamic>? extra,
     VerifyToSendMessage? verifyToSend,
     VerifyToSendNotification? verifyToSendNotification,

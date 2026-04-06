@@ -90,13 +90,14 @@ class _ChatInputState extends State<ChatInput> with WidgetsBindingObserver {
   }
 
   void _sendText({
+    String? text,
     Map<String, dynamic>? extra,
     VerifyToSendMessage? verifyToSend,
     VerifyToSendNotification? verifyToSendNotification,
     OnDeniedToSendMessage? onDeniedToSend,
     OnDeniedToSendNotification? onDeniedToSendNotification,
   }) {
-    final text = _controller.text.trim();
+    text ??= _controller.text.trim();
     if (text.isEmpty) return;
 
     _typingTimer?.cancel();

@@ -2,8 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.20] - 2026-04-06
+
+- Improve send text to send modified text
+
 ## [1.0.19] - 2026-03-31
+
 ## [1.0.18] - 2026-03-31
+
 ## [1.0.17] - 2026-03-31
 
 - RoomManager improved
