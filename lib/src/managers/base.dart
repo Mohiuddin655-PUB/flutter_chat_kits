@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 abstract class BaseNotifier extends ChangeNotifier with WidgetsBindingObserver {
   final Duration pausedDurationWhenAppBackground;
+  final Future<bool> connection;
   final Stream<bool> connectivity;
   Timer? _pausedTimer;
   StreamSubscription? _subscription;
@@ -29,9 +30,12 @@ abstract class BaseNotifier extends ChangeNotifier with WidgetsBindingObserver {
     });
   }
 
-  BaseNotifier(this.pausedDurationWhenAppBackground, this.connectivity) {
-    WidgetsBinding.instance.addObserver(this);
-    _subscription = connectivity.listen((v) {
+  BaseNotifier(
+    this.pausedDurationWhenAppBackground,
+    this.connection,
+    this.connectivity,
+  ) {
+    void setup(bool v) {
       _connected = v;
       notify();
       if (_connected) {
@@ -39,12 +43,31 @@ abstract class BaseNotifier extends ChangeNotifier with WidgetsBindingObserver {
       } else {
         stop();
       }
+    }
+
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      connection.then(setup);
+      _subscription = connectivity.listen(setup);
     });
   }
 
-  void attach(String uid) {
+  void connected() {
+    _connected = true;
+    notifyListeners();
+    run();
+  }
+
+  void disconnected() {
+    _connected = false;
+    notifyListeners();
+    stop();
+  }
+
+  void attach(String uid, {bool? connected}) {
     me = uid;
     notifyListeners();
+    _connected = connected ?? _connected;
     if (_connected) run();
   }
 

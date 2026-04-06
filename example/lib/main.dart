@@ -45,22 +45,22 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await InAppNotifications.init();
+  bool isConnected(Iterable<ConnectivityResult> results) {
+    bool isConnected(ConnectivityResult result) {
+      if (result == ConnectivityResult.mobile) return true;
+      if (result == ConnectivityResult.wifi) return true;
+      if (result == ConnectivityResult.ethernet) return true;
+      return false;
+    }
+
+    final connected = results.any(isConnected);
+    return connected;
+  }
+
+  ;
   RoomManager.init(
-    connectivity: Connectivity().onConnectivityChanged.map((e) {
-      bool _isConnected(Iterable<ConnectivityResult> results) {
-        bool isConnected(ConnectivityResult result) {
-          if (result == ConnectivityResult.mobile) return true;
-          if (result == ConnectivityResult.wifi) return true;
-          if (result == ConnectivityResult.ethernet) return true;
-          return false;
-        }
-
-        final connected = results.any(isConnected);
-        return connected;
-      }
-
-      return _isConnected(e);
-    }),
+    connection: Connectivity().checkConnectivity().then(isConnected),
+    connectivity: Connectivity().onConnectivityChanged.map(isConnected),
     room: ChatRoomService(),
     message: ChatMessageService(),
     status: ChatStatusService(),

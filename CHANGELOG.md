@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.21] - 2026-04-06
+
+- Connectivity bug fixed
+
 ## [1.0.20] - 2026-04-06
 
 - Improve send text to send modified text

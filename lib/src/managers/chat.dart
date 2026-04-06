@@ -10,7 +10,11 @@ import 'room.dart';
 
 class ChatManager extends BaseNotifier {
   ChatManager(this.room)
-      : super(Duration(minutes: 1), RoomManager.i.connectivity);
+      : super(
+          Duration(minutes: 1),
+          RoomManager.i.connection,
+          RoomManager.i.connectivity,
+        );
 
   late Room room;
   late final profile = ValueNotifier(RoomManager.i.profileFromRoom(room));

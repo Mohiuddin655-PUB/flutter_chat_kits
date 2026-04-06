@@ -43,6 +43,7 @@ class RoomManager extends BaseNotifier {
 
   RoomManager._(
     super.pausedDurationWhenAppBackground,
+    super.connection,
     super.connectivity,
     this.fetchGroupUserProfiles,
     this._room,
@@ -63,6 +64,7 @@ class RoomManager extends BaseNotifier {
   static void init({
     bool fetchGroupUserProfiles = false,
     Duration pausedDurationWhenAppBackground = const Duration(minutes: 2),
+    required Future<bool> connection,
     required Stream<bool> connectivity,
     required ChatRoomDelegate room,
     required ChatMessageDelegate message,
@@ -76,6 +78,7 @@ class RoomManager extends BaseNotifier {
   }) async {
     _i = RoomManager._(
       pausedDurationWhenAppBackground,
+      connection,
       connectivity,
       fetchGroupUserProfiles,
       room,
@@ -428,8 +431,8 @@ class RoomManager extends BaseNotifier {
   }
 
   @override
-  void attach(String uid) {
-    super.attach(uid);
+  void attach(String uid, {bool? connected}) {
+    super.attach(uid, connected: connected);
     markAsOnline(true);
   }
 
