@@ -1,19 +1,20 @@
-import 'dart:async';
+import 'dart:async' show StreamSubscription;
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show setEquals;
+import 'package:flutter/material.dart' show ValueNotifier, WidgetsBinding;
 
-import '../delegates/message.dart';
-import '../delegates/settings.dart';
-import '../models/message.dart';
-import '../models/profile.dart';
-import '../models/room.dart';
-import '../models/status.dart';
-import '../models/typing.dart';
-import '../utils/field_value.dart';
-import 'base.dart';
-import 'room_manager.dart';
-import 'room_manager_base.dart';
+import '../delegates/message.dart' show PaginatedMessageStream;
+import '../delegates/settings.dart' show ChatSilentNotification;
+import '../models/message.dart'
+    show Message, MessageStatus, MessageKeys, TextMessage, LinkMessage;
+import '../models/profile.dart' show Profile;
+import '../models/room.dart' show Room, RoomKeys;
+import '../models/status.dart' show Status;
+import '../models/typing.dart' show Typing;
+import '../utils/field_value.dart' show ChatValueDelete, ChatValueTimestamp;
+import 'base.dart' show BaseNotifier;
+import 'room_manager.dart' show RoomManager;
+import 'room_manager_base.dart' show OnDeniedToSendMessage, VerifyToSendMessage;
 
 part '../extensions/chat_manager_actions.dart';
 part '../extensions/chat_manager_messaging.dart';
@@ -23,11 +24,11 @@ class ChatManager extends BaseNotifier {
   // ── Constructor ────────────────────────────────────────────────────────────
 
   ChatManager(this.room)
-    : super(
-        pausedDurationWhenAppBackground: const Duration(minutes: 1),
-        connection: RoomManager.i.connection,
-        connectivity: RoomManager.i.connectivity,
-      );
+      : super(
+          pausedDurationWhenAppBackground: const Duration(minutes: 1),
+          connection: RoomManager.i.connection,
+          connectivity: RoomManager.i.connectivity,
+        );
 
   // ── Room State ─────────────────────────────────────────────────────────────
 
@@ -233,10 +234,9 @@ class ChatManager extends BaseNotifier {
         for (final e in event) {
           final local =
               _pendingSendIds.contains(e.id) ? mappedMessages[e.id] : null;
-          incoming[e.id] =
-              (local != null && local.status != MessageStatus.sent)
-                  ? e.copyWith(status: local.status)
-                  : e;
+          incoming[e.id] = (local != null && local.status != MessageStatus.sent)
+              ? e.copyWith(status: local.status)
+              : e;
         }
 
         for (final id in _pendingSendIds) {
@@ -290,13 +290,12 @@ class ChatManager extends BaseNotifier {
   }
 
   void _deliverUndelivered() {
-    final undelivered =
-        mappedMessages.values.where((msg) {
-          if (msg.isSentByMe) return false;
-          if (msg.isDeliveredByMe || msg.isSeenByMe) return false;
-          if (_pendingDeliveryIds.contains(msg.id)) return false;
-          return true;
-        }).toList();
+    final undelivered = mappedMessages.values.where((msg) {
+      if (msg.isSentByMe) return false;
+      if (msg.isDeliveredByMe || msg.isSeenByMe) return false;
+      if (_pendingDeliveryIds.contains(msg.id)) return false;
+      return true;
+    }).toList();
 
     if (undelivered.isEmpty) return;
 
@@ -372,13 +371,12 @@ class ChatManager extends BaseNotifier {
       return;
     }
     final value = text.trim();
-    final linkRegex = RegExp(r'(https?:\/\/[^\s]+)', caseSensitive: false);
+    final linkRegex = RegExp(r'(https?://\S+)', caseSensitive: false);
     final matches = linkRegex.allMatches(value);
-    final newLinks =
-        matches
-            .map((match) => match.group(0)!)
-            .map((url) => url.replaceAll(RegExp(r'[.,)\]]+$'), ''))
-            .toSet();
+    final newLinks = matches
+        .map((match) => match.group(0)!)
+        .map((url) => url.replaceAll(RegExp(r'[.,)\]]+$'), ''))
+        .toSet();
     if (setEquals(newLinks, availableInputtedLinks)) return;
     availableInputtedLinks = newLinks;
     notifyListeners();

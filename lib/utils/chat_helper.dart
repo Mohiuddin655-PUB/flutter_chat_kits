@@ -1,7 +1,7 @@
-import 'dart:convert';
-import 'dart:math';
+import 'dart:convert' show utf8;
+import 'dart:math' show Random;
 
-import 'package:crypto/crypto.dart';
+import 'package:crypto/crypto.dart' show sha256;
 
 class ChatHelper {
   ChatHelper._();

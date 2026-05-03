@@ -1,8 +1,9 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show ValueChanged, debugPrint;
 
-import '../core/chat_manager.dart';
-import '../core/room_manager_base.dart';
-import '../models/room.dart';
+import '../core/chat_manager.dart' show ChatManager;
+import '../core/room_manager_base.dart'
+    show RoomManagerBase, OnChatPageOpeningCallback;
+import '../models/room.dart' show Room;
 
 mixin ManagerLifecycleMixin on RoomManagerBase {
   /// LinkedHashMap preserves insertion order — used as LRU access order.

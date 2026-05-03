@@ -1,32 +1,39 @@
-import '../delegates/ai.dart';
-import '../delegates/cache.dart';
-import '../delegates/error_reporter.dart';
-import '../delegates/message.dart';
-import '../delegates/normalizer.dart';
-import '../delegates/notification.dart';
-import '../delegates/profile.dart';
-import '../delegates/room.dart';
-import '../delegates/settings.dart';
-import '../delegates/status.dart';
-import '../delegates/typing.dart';
-import '../mixins/auto_refresh_mixin.dart';
-import '../mixins/bot_response_mixin.dart';
-import '../mixins/manager_lifecycle_mixin.dart';
-import '../mixins/message_mixin.dart';
-import '../mixins/notification_mixin.dart';
-import '../mixins/offline_queue_mixin.dart';
-import '../mixins/participant_mixin.dart';
-import '../mixins/presence_mixin.dart';
-import '../mixins/room_crud_mixin.dart';
-import '../mixins/room_toggle_mixin.dart';
-import '../mixins/room_update_mixin.dart';
-import '../mixins/subscription_mixin.dart';
-import '../mixins/token_mixin.dart';
-import '../models/message.dart';
-import '../models/profile.dart';
-import '../utils/model_configs.dart';
-import 'chat_manager.dart';
-import 'room_manager_base.dart';
+import '../delegates/ai.dart' show ChatAiDelegate;
+import '../delegates/cache.dart' show ChatCacheDelegate;
+import '../delegates/error_reporter.dart'
+    show ChatErrorReporter, DefaultChatErrorReporter;
+import '../delegates/message.dart' show ChatMessageDelegate;
+import '../delegates/normalizer.dart' show ChatFieldValueNormalizer;
+import '../delegates/notification.dart' show ChatNotificationDelegate;
+import '../delegates/profile.dart' show ChatProfileDelegate;
+import '../delegates/room.dart' show ChatRoomDelegate;
+import '../delegates/settings.dart'
+    show ChatUserSettingsDelegate, ChatSilentNotification;
+import '../delegates/status.dart' show ChatStatusDelegate;
+import '../delegates/typing.dart' show ChatTypingDelegate;
+import '../mixins/auto_refresh_mixin.dart' show AutoRefreshMixin;
+import '../mixins/bot_response_mixin.dart' show BotResponseMixin;
+import '../mixins/manager_lifecycle_mixin.dart' show ManagerLifecycleMixin;
+import '../mixins/message_mixin.dart' show MessageMixin;
+import '../mixins/notification_mixin.dart' show NotificationMixin;
+import '../mixins/offline_queue_mixin.dart' show OfflineQueueMixin;
+import '../mixins/participant_mixin.dart' show ParticipantMixin;
+import '../mixins/presence_mixin.dart' show PresenceMixin;
+import '../mixins/room_crud_mixin.dart' show RoomCrudMixin;
+import '../mixins/room_toggle_mixin.dart' show RoomToggleMixin;
+import '../mixins/room_update_mixin.dart' show RoomUpdateMixin;
+import '../mixins/subscription_mixin.dart' show SubscriptionMixin;
+import '../mixins/token_mixin.dart' show TokenMixin;
+import '../models/message.dart' show Message;
+import '../models/profile.dart' show Profile;
+import '../utils/model_configs.dart' show ChatModelConfigs;
+import 'chat_manager.dart' show ChatManagerMessaging;
+import 'room_manager_base.dart'
+    show
+        RoomManagerBase,
+        OnChatPageOpeningCallback,
+        VerifyToSendMessage,
+        OnDeniedToSendMessage;
 
 class RoomManager extends RoomManagerBase
     with
@@ -66,17 +73,17 @@ class RoomManager extends RoomManagerBase
     required ChatUserSettingsDelegate settings,
     required ChatFieldValueNormalizer normalizer,
     required ChatErrorReporter errorReporter,
-  }) : _ai = ai,
-       _cache = cache,
-       _room = room,
-       _message = message,
-       _status = status,
-       _typing = typing,
-       _profile = profile,
-       _notification = notification,
-       _settings = settings,
-       _errorReporter = errorReporter,
-       _n = normalizer;
+  })  : _ai = ai,
+        _cache = cache,
+        _room = room,
+        _message = message,
+        _status = status,
+        _typing = typing,
+        _profile = profile,
+        _notification = notification,
+        _settings = settings,
+        _errorReporter = errorReporter,
+        _n = normalizer;
 
   // ── Singleton ─────────────────────────────────────────────────────────────
 

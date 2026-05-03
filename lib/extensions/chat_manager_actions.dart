@@ -115,12 +115,11 @@ extension ChatManagerActions on ChatManager {
       (uid) => uid == me || msg.removes[uid] == true,
     );
 
-    final status =
-        allRemoved
-            ? await RoomManager.i.deleteMessage(msg)
-            : await RoomManager.i.updateMessage(msg.roomId, msg.id, {
-              '${MessageKeys.i.removes}.$me': true,
-            });
+    final status = allRemoved
+        ? await RoomManager.i.deleteMessage(msg)
+        : await RoomManager.i.updateMessage(msg.roomId, msg.id, {
+            '${MessageKeys.i.removes}.$me': true,
+          });
 
     if (!status) put(msg);
   }

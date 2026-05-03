@@ -1,13 +1,30 @@
-import 'dart:async';
-import 'dart:math';
+import 'dart:async' show Timer;
+import 'dart:math' show Random;
 
-import '../core/room_manager_base.dart';
-import '../delegates/ai.dart';
-import '../models/message.dart';
-import '../models/profile.dart';
-import '../models/room.dart';
-import '../models/status.dart';
-import '../utils/field_value.dart';
+import '../core/room_manager_base.dart' show RoomManagerBase;
+import '../delegates/ai.dart'
+    show
+        ChatAiRequest,
+        ChatAiTextReplyRequest,
+        ChatAiAudioReplyRequest,
+        ChatAiImageReplyRequest,
+        ChatAiVideoReplyRequest,
+        ChatAiLinkReplyRequest;
+import '../models/message.dart'
+    show
+        Message,
+        MessageType,
+        TextMessage,
+        LinkMessage,
+        AudioMessage,
+        ImageMessage,
+        VideoMessage,
+        MessageKeys,
+        MessageStatus;
+import '../models/profile.dart' show BotProfile;
+import '../models/room.dart' show Room, RoomKeys;
+import '../models/status.dart' show StatusKeys;
+import '../utils/field_value.dart' show ChatValueDelete, ChatValueTimestamp;
 
 mixin BotResponseMixin on RoomManagerBase {
   // ═════════════════════════════════════════════════════════════════════════
@@ -54,12 +71,12 @@ mixin BotResponseMixin on RoomManagerBase {
   /// Pre-written leave messages — one is picked at random.
   /// Override to match the bot's personality / language.
   List<String> get leaveMessages => const [
-    "I need to go now, talk to you later! 👋",
-    "Hey, gotta head out for a bit. Catch you later!",
-    "Let's continue this later, see you soon! 😊",
-    "Taking a little break. I'll be back! 💕",
-    "I have to run, talk soon!",
-  ];
+        "I need to go now, talk to you later! 👋",
+        "Hey, gotta head out for a bit. Catch you later!",
+        "Let's continue this later, see you soon! 😊",
+        "Taking a little break. I'll be back! 💕",
+        "I have to run, talk soon!",
+      ];
 
   // ═════════════════════════════════════════════════════════════════════════
   //  Public entry point
@@ -385,45 +402,44 @@ mixin BotResponseMixin on RoomManagerBase {
       }
     }
 
-    final conversations =
-        messages
-            .where((m) => m.id != incoming.id && !m.isEmpty && !m.shouldRemove)
-            .toList();
+    final conversations = messages
+        .where((m) => m.id != incoming.id && !m.isEmpty && !m.shouldRemove)
+        .toList();
 
     return switch (incoming) {
       TextMessage m => ChatAiTextReplyRequest(
-        profile: botProfile,
-        conversations: conversations,
-        replyMessage: replyMessage,
-        text: m.text,
-      ),
+          profile: botProfile,
+          conversations: conversations,
+          replyMessage: replyMessage,
+          text: m.text,
+        ),
       AudioMessage m => ChatAiAudioReplyRequest(
-        profile: botProfile,
-        conversations: conversations,
-        replyMessage: replyMessage,
-        url: m.url,
-        caption: null,
-      ),
+          profile: botProfile,
+          conversations: conversations,
+          replyMessage: replyMessage,
+          url: m.url,
+          caption: null,
+        ),
       ImageMessage m => ChatAiImageReplyRequest(
-        profile: botProfile,
-        conversations: conversations,
-        replyMessage: replyMessage,
-        urls: m.urls,
-        caption: m.caption,
-      ),
+          profile: botProfile,
+          conversations: conversations,
+          replyMessage: replyMessage,
+          urls: m.urls,
+          caption: m.caption,
+        ),
       VideoMessage m => ChatAiVideoReplyRequest(
-        profile: botProfile,
-        conversations: conversations,
-        replyMessage: replyMessage,
-        url: m.url,
-        caption: m.caption,
-      ),
+          profile: botProfile,
+          conversations: conversations,
+          replyMessage: replyMessage,
+          url: m.url,
+          caption: m.caption,
+        ),
       LinkMessage m => ChatAiLinkReplyRequest(
-        profile: botProfile,
-        conversations: conversations,
-        replyMessage: replyMessage,
-        link: m.link,
-      ),
+          profile: botProfile,
+          conversations: conversations,
+          replyMessage: replyMessage,
+          link: m.link,
+        ),
       _ => null,
     };
   }

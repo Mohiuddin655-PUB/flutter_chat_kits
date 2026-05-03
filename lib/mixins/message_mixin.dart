@@ -1,15 +1,25 @@
-import 'dart:async';
+import 'dart:async' show unawaited;
 
-import '../core/room_manager_base.dart';
-import '../delegates/message.dart';
-import '../delegates/settings.dart';
-import '../models/message.dart';
-import '../models/profile.dart';
-import '../models/room.dart';
-import '../utils/field_value.dart';
-import '../utils/file_upload_helper.dart';
-import '../utils/retry_helper.dart';
-import 'offline_queue_mixin.dart';
+import '../core/room_manager_base.dart'
+    show RoomManagerBase, VerifyToSendMessage, OnDeniedToSendMessage;
+import '../delegates/message.dart' show MessageUploadData;
+import '../delegates/settings.dart'
+    show ChatNewMessageNotification, ChatSilentNotification;
+import '../models/message.dart'
+    show
+        Message,
+        MessageStatus,
+        VideoMessage,
+        AudioMessage,
+        ImageMessage,
+        MessageType,
+        MessageKeys;
+import '../models/profile.dart' show kBotPrefix;
+import '../models/room.dart' show RoomKeys, Room;
+import '../utils/field_value.dart' show ChatValueTimestamp, ChatValueIncrement;
+import '../utils/file_upload_helper.dart' show FileUploadHelper;
+import '../utils/retry_helper.dart' show RetryHelper;
+import 'offline_queue_mixin.dart' show OfflineQueueMixin;
 
 mixin MessageMixin on RoomManagerBase, OfflineQueueMixin {
   // ═══════════════════════════════════════════════════════════════════════════
@@ -144,8 +154,8 @@ mixin MessageMixin on RoomManagerBase, OfflineQueueMixin {
       final normalizedMsg = n.normalize(sent.source, n.message);
 
       await RetryHelper.run(
-        operation:
-            () => messageDelegate.create(msg.roomId, msg.id, normalizedMsg),
+        operation: () =>
+            messageDelegate.create(msg.roomId, msg.id, normalizedMsg),
         onRetry: (attempt, error) {
           managerOrNull(
             msg.roomId,
@@ -164,14 +174,13 @@ mixin MessageMixin on RoomManagerBase, OfflineQueueMixin {
       );
 
       await RetryHelper.run(
-        operation:
-            () => roomDelegate.update(
-              msg.roomId,
-              n.normalize(
-                _roomMessageUpdatePayload(target, msg.id, body),
-                n.room,
-              ),
-            ),
+        operation: () => roomDelegate.update(
+          msg.roomId,
+          n.normalize(
+            _roomMessageUpdatePayload(target, msg.id, body),
+            n.room,
+          ),
+        ),
         onRetry: (attempt, error) {
           errorReporter.report(
             error,
@@ -524,12 +533,11 @@ mixin MessageMixin on RoomManagerBase, OfflineQueueMixin {
     final urls = await _upload(msg.roomId, msg.id, msg.type, paths);
 
     if (msg is VideoMessage) {
-      final thumbnail =
-          msg.thumbnail.isNotEmpty
-              ? await _upload(msg.roomId, msg.id, msg.type, [
-                msg.thumbnail,
-              ]).then((v) => v.firstOrNull ?? '')
-              : '';
+      final thumbnail = msg.thumbnail.isNotEmpty
+          ? await _upload(msg.roomId, msg.id, msg.type, [
+              msg.thumbnail,
+            ]).then((v) => v.firstOrNull ?? '')
+          : '';
       return msg.copyWith(thumbnail: thumbnail, url: urls.firstOrNull ?? '');
     }
 
@@ -541,11 +549,11 @@ mixin MessageMixin on RoomManagerBase, OfflineQueueMixin {
   }
 
   List<String> _localPathsFor(Message msg) => switch (msg) {
-    AudioMessage() => [msg.url],
-    ImageMessage() => msg.urls,
-    VideoMessage() => [msg.url],
-    _ => [],
-  };
+        AudioMessage() => [msg.url],
+        ImageMessage() => msg.urls,
+        VideoMessage() => [msg.url],
+        _ => [],
+      };
 
   Future<List<String>> _upload(
     String roomId,

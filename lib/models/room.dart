@@ -1,10 +1,10 @@
-import 'package:equatable/equatable.dart';
+import 'package:equatable/equatable.dart' show Equatable;
 
-import '../core/room_manager.dart';
-import '../utils/enum_parser.dart';
-import '../utils/field_value.dart';
-import '../utils/parser.dart';
-import 'message.dart';
+import '../core/room_manager.dart' show RoomManager;
+import '../utils/enum_parser.dart' show ChatEnumParser;
+import '../utils/field_value.dart' show ChatValueTimestamp;
+import '../utils/parser.dart' show ChatListParser, MapParser;
+import 'message.dart' show MessageStatus;
 
 typedef RoomExtra = Map<String, dynamic>;
 
@@ -251,16 +251,14 @@ class Room extends Equatable {
           lastMessage is String && lastMessage.isNotEmpty ? lastMessage : null,
       lastMessageDeleted:
           lastMessageDeleted is bool ? lastMessageDeleted : false,
-      lastMessageId:
-          lastMessageId is String && lastMessageId.isNotEmpty
-              ? lastMessageId
-              : '',
+      lastMessageId: lastMessageId is String && lastMessageId.isNotEmpty
+          ? lastMessageId
+          : '',
       lastMessageSenderId:
           lastMessageSenderId is String ? lastMessageSenderId : '',
-      lastMessageStatuses:
-          lastMessageStatuses is Map
-              ? MessageStatus.values.references(lastMessageStatuses)
-              : {},
+      lastMessageStatuses: lastMessageStatuses is Map
+          ? MessageStatus.values.references(lastMessageStatuses)
+          : {},
       leaves: leaves is Iterable ? leaves.parsedStrings.toSet() : {},
       mutes: mutes is Iterable ? mutes.parsedStrings.toSet() : {},
       participants:
@@ -432,31 +430,31 @@ class Room extends Equatable {
 
   @override
   List<Object?> get props => [
-    archives,
-    blocks,
-    createdAt,
-    createdBy,
-    extra,
-    id,
-    isBot,
-    isDeleted,
-    isGroup,
-    isLocal,
-    isVerified,
-    lastMessage,
-    lastMessageDeleted,
-    lastMessageId,
-    lastMessageSenderId,
-    lastMessageStatuses,
-    leaves,
-    mutes,
-    participants,
-    pins,
-    removes,
-    restricts,
-    _unseenCounts,
-    updatedAt,
-  ];
+        archives,
+        blocks,
+        createdAt,
+        createdBy,
+        extra,
+        id,
+        isBot,
+        isDeleted,
+        isGroup,
+        isLocal,
+        isVerified,
+        lastMessage,
+        lastMessageDeleted,
+        lastMessageId,
+        lastMessageSenderId,
+        lastMessageStatuses,
+        leaves,
+        mutes,
+        participants,
+        pins,
+        removes,
+        restricts,
+        _unseenCounts,
+        updatedAt,
+      ];
 }
 
 // ── DirectRoom ────────────────────────────────────────────────────────────────

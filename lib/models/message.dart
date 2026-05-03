@@ -1,13 +1,13 @@
-import 'dart:convert';
+import 'dart:convert' show jsonDecode, jsonEncode;
 
-import 'package:equatable/equatable.dart';
+import 'package:equatable/equatable.dart' show Equatable;
 
-import '../core/chat_manager.dart';
-import '../core/room_manager.dart';
-import '../utils/chat_helper.dart';
-import '../utils/enum_parser.dart';
-import '../utils/field_value.dart';
-import '../utils/parser.dart';
+import '../core/chat_manager.dart' show ChatManager;
+import '../core/room_manager.dart' show RoomManager;
+import '../utils/chat_helper.dart' show ChatHelper;
+import '../utils/enum_parser.dart' show ChatEnumParser;
+import '../utils/field_value.dart' show ChatValueTimestamp;
+import '../utils/parser.dart' show MapParser, ChatListParser;
 
 typedef MessageExtra = Map<String, dynamic>;
 
@@ -166,12 +166,12 @@ class Message extends Equatable {
   }
 
   String? get content => switch (this) {
-    ImageMessage m => m.caption,
-    LinkMessage m => m.link,
-    TextMessage m => m.text,
-    VideoMessage m => m.caption,
-    _ => null,
-  };
+        ImageMessage m => m.caption,
+        LinkMessage m => m.link,
+        TextMessage m => m.text,
+        VideoMessage m => m.caption,
+        _ => null,
+      };
 
   Message get replyMessage {
     final msg = ChatManager.ofOrNull(roomId)?.mappedMessages[replyId];
@@ -209,11 +209,11 @@ class Message extends Equatable {
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   List<String> findPathOrUrls([bool thumbnail = false]) => switch (this) {
-    AudioMessage m => [m.url],
-    ImageMessage m => m.urls,
-    VideoMessage m => [m.url, if (thumbnail) m.thumbnail],
-    _ => [],
-  };
+        AudioMessage m => [m.url],
+        ImageMessage m => m.urls,
+        VideoMessage m => [m.url, if (thumbnail) m.thumbnail],
+        _ => [],
+      };
 
   String lastMessage({bool edited = false, bool deleted = false}) {
     if (edited) return '{SENDER} edited a message';
@@ -263,31 +263,31 @@ class Message extends Equatable {
     required this.extra,
     required ChatValueTimestamp? editedAt,
     required String? replyId,
-  }) : editedAt = editedAt ?? const ChatValueTimestamp(),
-       replyId = replyId ?? '';
+  })  : editedAt = editedAt ?? const ChatValueTimestamp(),
+        replyId = replyId ?? '';
 
   // ── Factories ─────────────────────────────────────────────────────────────
 
   const Message.empty()
-    : this(
-        id: '',
-        roomId: '',
-        senderId: '',
-        createdAt: const ChatValueTimestamp(),
-        updatedAt: const ChatValueTimestamp(),
-        type: MessageType.none,
-        statuses: const {},
-        deletes: const {},
-        pins: const {},
-        removes: const {},
-        editedAt: const ChatValueTimestamp(),
-        replyId: null,
-        reactions: const {},
-        isDeleted: false,
-        isEdited: false,
-        isForwarded: false,
-        extra: const {},
-      );
+      : this(
+          id: '',
+          roomId: '',
+          senderId: '',
+          createdAt: const ChatValueTimestamp(),
+          updatedAt: const ChatValueTimestamp(),
+          type: MessageType.none,
+          statuses: const {},
+          deletes: const {},
+          pins: const {},
+          removes: const {},
+          editedAt: const ChatValueTimestamp(),
+          replyId: null,
+          reactions: const {},
+          isDeleted: false,
+          isEdited: false,
+          isForwarded: false,
+          extra: const {},
+        );
 
   factory Message.parse(Object? source, {MessageExtra? extra}) {
     if (source is Message) return source;
@@ -342,24 +342,22 @@ class Message extends Equatable {
 
     return switch (msg.type) {
       MessageType.none => const Message.empty(),
-      MessageType.text =>
-        mContent == null
-            ? const Message.empty()
-            : TextMessage.from(msg, mContent),
-      MessageType.link =>
-        mContent == null
-            ? const Message.empty()
-            : LinkMessage.from(msg, mContent),
+      MessageType.text => mContent == null
+          ? const Message.empty()
+          : TextMessage.from(msg, mContent),
+      MessageType.link => mContent == null
+          ? const Message.empty()
+          : LinkMessage.from(msg, mContent),
       MessageType.image => _parseImage(msg, source, keys, mContent),
       MessageType.audio => _parseAudio(msg, source, keys, mDuration, mUrl),
       MessageType.video => _parseVideo(
-        msg,
-        source,
-        keys,
-        mContent,
-        mDuration,
-        mUrl,
-      ),
+          msg,
+          source,
+          keys,
+          mContent,
+          mDuration,
+          mUrl,
+        ),
       MessageType.custom => _parseCustom(msg, source, keys),
     };
   }
@@ -371,10 +369,9 @@ class Message extends Equatable {
     String? caption,
   ) {
     final urls = source[keys.urls];
-    final mUrls =
-        urls is List && urls.isNotEmpty
-            ? urls.map((e) => e.toString()).where((e) => e.isNotEmpty).toList()
-            : <String>[];
+    final mUrls = urls is List && urls.isNotEmpty
+        ? urls.map((e) => e.toString()).where((e) => e.isNotEmpty).toList()
+        : <String>[];
     if (mUrls.isEmpty) return const Message.empty();
     return ImageMessage.from(msg, caption, mUrls);
   }
@@ -532,10 +529,9 @@ class Message extends Equatable {
       createdAt: ChatValueTimestamp.tryParse(createdAt) ?? this.createdAt,
       updatedAt: ChatValueTimestamp.tryParse(updatedAt) ?? this.updatedAt,
       editedAt: ChatValueTimestamp.tryParse(editedAt) ?? this.editedAt,
-      reactions:
-          reactions is Map
-              ? reactions.tryParse() ?? this.reactions
-              : this.reactions,
+      reactions: reactions is Map
+          ? reactions.tryParse() ?? this.reactions
+          : this.reactions,
       deletes:
           deletes is Map ? deletes.tryParse() ?? this.deletes : this.deletes,
       pins: pins is Map ? pins.tryParse() ?? this.pins : this.pins,
@@ -579,24 +575,24 @@ class Message extends Equatable {
 
   @override
   List<Object?> get props => [
-    id,
-    roomId,
-    senderId,
-    createdAt,
-    updatedAt,
-    type,
-    statuses,
-    replyId,
-    reactions,
-    pins,
-    deletes,
-    removes,
-    isDeleted,
-    isEdited,
-    editedAt,
-    isForwarded,
-    extra,
-  ];
+        id,
+        roomId,
+        senderId,
+        createdAt,
+        updatedAt,
+        type,
+        statuses,
+        replyId,
+        reactions,
+        pins,
+        deletes,
+        removes,
+        isDeleted,
+        isEdited,
+        editedAt,
+        isForwarded,
+        extra,
+      ];
 }
 
 // ── AudioMessage ──────────────────────────────────────────────────────────────
@@ -1562,12 +1558,12 @@ class VideoMessage extends Message {
 
   @override
   List<Object?> get props => [
-    ...super.props,
-    caption,
-    durationInSec,
-    thumbnail,
-    url,
-  ];
+        ...super.props,
+        caption,
+        durationInSec,
+        thumbnail,
+        url,
+      ];
 
   @override
   String toString() => '$VideoMessage#$hashCode($url)';

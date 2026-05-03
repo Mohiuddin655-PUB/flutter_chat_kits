@@ -1,8 +1,8 @@
-import 'dart:async';
+import 'dart:async' show StreamSubscription, Timer;
 
-import '../core/room_manager_base.dart';
-import '../models/message.dart';
-import '../models/room.dart';
+import '../core/room_manager_base.dart' show RoomManagerBase;
+import '../models/message.dart' show MessageStatus;
+import '../models/room.dart' show Room, DirectRoom, GroupRoom;
 
 mixin SubscriptionMixin on RoomManagerBase {
   StreamSubscription? _roomSubscription;
@@ -56,47 +56,45 @@ mixin SubscriptionMixin on RoomManagerBase {
     _roomSubscription?.cancel();
     if (!isConnected || me.isEmpty) return;
 
-    _roomSubscription = roomDelegate
-        .stream(me)
-        .listen(
-          (rooms) {
-            loading = false;
+    _roomSubscription = roomDelegate.stream(me).listen(
+      (rooms) {
+        loading = false;
 
-            if (rooms.isEmpty) {
-              // Guard against transient empty emissions — only treat as
-              // full deletion if we previously had rooms AND we're online.
-              // Otherwise it's likely a network blip or first-load empty
-              // state and wiping cache would cause UI flicker.
-              if (mappedRooms.isEmpty || !isConnected) {
-                notify();
-                return;
-              }
-              _handleAllRoomsRemoved();
-              return;
-            }
-
-            final previousRooms = mappedRooms;
-            final incoming = {for (final r in rooms) r.id: r};
-            _notifyDeletedRooms(incoming);
-
-            _triggerBackgroundDelivery(rooms);
-
-            mappedRooms = incoming;
-            reconcileMetadata(buildActiveParticipants());
-            _updateChangedRoomNotifiers(previousRooms);
+        if (rooms.isEmpty) {
+          // Guard against transient empty emissions — only treat as
+          // full deletion if we previously had rooms AND we're online.
+          // Otherwise it's likely a network blip or first-load empty
+          // state and wiping cache would cause UI flicker.
+          if (mappedRooms.isEmpty || !isConnected) {
             notify();
-          },
-          onError: (error, stackTrace) {
-            loading = false;
-            error = true;
-            errorReporter.report(
-              error,
-              stackTrace: stackTrace is StackTrace ? stackTrace : null,
-              source: 'SubscriptionMixin.startListening',
-            );
-            notify();
-          },
+            return;
+          }
+          _handleAllRoomsRemoved();
+          return;
+        }
+
+        final previousRooms = mappedRooms;
+        final incoming = {for (final r in rooms) r.id: r};
+        _notifyDeletedRooms(incoming);
+
+        _triggerBackgroundDelivery(rooms);
+
+        mappedRooms = incoming;
+        reconcileMetadata(buildActiveParticipants());
+        _updateChangedRoomNotifiers(previousRooms);
+        notify();
+      },
+      onError: (error, stackTrace) {
+        loading = false;
+        error = true;
+        errorReporter.report(
+          error,
+          stackTrace: stackTrace is StackTrace ? stackTrace : null,
+          source: 'SubscriptionMixin.startListening',
         );
+        notify();
+      },
+    );
   }
 
   @override
@@ -206,10 +204,9 @@ mixin SubscriptionMixin on RoomManagerBase {
   Set<String> _topRoomsByActivity(int count) {
     if (count <= 0 || mappedRooms.isEmpty) return const {};
 
-    final filtered =
-        mappedRooms.values
-            .where((r) => !r.isRemovedByMe && r.isVerified)
-            .toList();
+    final filtered = mappedRooms.values
+        .where((r) => !r.isRemovedByMe && r.isVerified)
+        .toList();
 
     if (filtered.length <= count) {
       return filtered.map((r) => r.id).toSet();

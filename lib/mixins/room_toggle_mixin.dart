@@ -1,61 +1,62 @@
-import '../core/room_manager_base.dart';
-import '../models/room.dart';
-import '../utils/field_value.dart';
+import '../core/room_manager_base.dart' show RoomManagerBase;
+import '../models/room.dart' show Room, RoomKeys;
+import '../utils/field_value.dart'
+    show ChatValueRemove, ChatValueDelete, ChatValueAdd;
 
 mixin RoomToggleMixin on RoomManagerBase {
   Future<void> archive(Room room) => _toggleMeInSet(
-    room,
-    operation: 'archive',
-    guard: room.isArchivedByMe,
-    field: RoomKeys.i.archives,
-    add: true,
-    optimistic: room.copyWith(isArchived: true),
-  );
+        room,
+        operation: 'archive',
+        guard: room.isArchivedByMe,
+        field: RoomKeys.i.archives,
+        add: true,
+        optimistic: room.copyWith(isArchived: true),
+      );
 
   Future<void> unarchive(Room room) => _toggleMeInSet(
-    room,
-    operation: 'unarchive',
-    guard: !room.isArchivedByMe,
-    field: RoomKeys.i.archives,
-    add: false,
-    optimistic: room.copyWith(isArchived: false),
-  );
+        room,
+        operation: 'unarchive',
+        guard: !room.isArchivedByMe,
+        field: RoomKeys.i.archives,
+        add: false,
+        optimistic: room.copyWith(isArchived: false),
+      );
 
   Future<void> mute(Room room) => _toggleMeInSet(
-    room,
-    operation: 'mute',
-    guard: room.isMutedByMe,
-    field: RoomKeys.i.mutes,
-    add: true,
-    optimistic: room.copyWith(isMuted: true),
-  );
+        room,
+        operation: 'mute',
+        guard: room.isMutedByMe,
+        field: RoomKeys.i.mutes,
+        add: true,
+        optimistic: room.copyWith(isMuted: true),
+      );
 
   Future<void> unmute(Room room) => _toggleMeInSet(
-    room,
-    operation: 'unmute',
-    guard: !room.isMutedByMe,
-    field: RoomKeys.i.mutes,
-    add: false,
-    optimistic: room.copyWith(isMuted: false),
-  );
+        room,
+        operation: 'unmute',
+        guard: !room.isMutedByMe,
+        field: RoomKeys.i.mutes,
+        add: false,
+        optimistic: room.copyWith(isMuted: false),
+      );
 
   Future<void> pin(Room room) => _toggleMeInSet(
-    room,
-    operation: 'pin',
-    guard: room.isPinnedByMe,
-    field: RoomKeys.i.pins,
-    add: true,
-    optimistic: room.copyWith(isPinned: true),
-  );
+        room,
+        operation: 'pin',
+        guard: room.isPinnedByMe,
+        field: RoomKeys.i.pins,
+        add: true,
+        optimistic: room.copyWith(isPinned: true),
+      );
 
   Future<void> unpin(Room room) => _toggleMeInSet(
-    room,
-    operation: 'unpin',
-    guard: !room.isPinnedByMe,
-    field: RoomKeys.i.pins,
-    add: false,
-    optimistic: room.copyWith(isPinned: false),
-  );
+        room,
+        operation: 'unpin',
+        guard: !room.isPinnedByMe,
+        field: RoomKeys.i.pins,
+        add: false,
+        optimistic: room.copyWith(isPinned: false),
+      );
 
   Future<void> block(Room room, Iterable<String> participants) =>
       _toggleParticipantsInSet(

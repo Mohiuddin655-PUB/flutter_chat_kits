@@ -1,11 +1,18 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show debugPrint;
 
-import '../core/room_manager_base.dart';
-import '../delegates/notification.dart';
-import '../delegates/settings.dart';
-import '../models/message.dart';
-import '../models/profile.dart';
-import '../models/room.dart';
+import '../core/room_manager_base.dart' show RoomManagerBase;
+import '../delegates/notification.dart' show ChatNotificationContent;
+import '../delegates/settings.dart'
+    show
+        ChatNotification,
+        ChatSilentNotification,
+        ChatNewRoomNotification,
+        ChatNewMessageNotification,
+        ChatDeleteMessageNotification,
+        ChatCustomNotification;
+import '../models/message.dart' show Message;
+import '../models/profile.dart' show UserProfile;
+import '../models/room.dart' show Room;
 
 mixin NotificationMixin on RoomManagerBase {
   // ═══════════════════════════════════════════════════════════════════════════
@@ -94,16 +101,16 @@ mixin NotificationMixin on RoomManagerBase {
     }
 
     return switch (notification) {
-      ChatNewRoomNotification() => settingsDelegate
-          .isEnabledToSendNewRoomNotification(participant),
-      ChatNewMessageNotification() => settingsDelegate
-          .isEnabledToSendMessageNotification(participant),
-      ChatDeleteMessageNotification() => settingsDelegate
-          .isEnabledToSendDeleteRoomNotification(participant),
+      ChatNewRoomNotification() =>
+        settingsDelegate.isEnabledToSendNewRoomNotification(participant),
+      ChatNewMessageNotification() =>
+        settingsDelegate.isEnabledToSendMessageNotification(participant),
+      ChatDeleteMessageNotification() =>
+        settingsDelegate.isEnabledToSendDeleteRoomNotification(participant),
       ChatCustomNotification() => settingsDelegate.isEnabled(
-        participant,
-        notification.type,
-      ),
+          participant,
+          notification.type,
+        ),
       _ => Future.value(false),
     };
   }

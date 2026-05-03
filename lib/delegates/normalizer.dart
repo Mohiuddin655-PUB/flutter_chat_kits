@@ -1,4 +1,4 @@
-import '../utils/field_value.dart';
+import '../utils/field_value.dart' show ChatValueTimestamp;
 
 abstract class ChatFieldValueNormalizer {
   Object? message(Object? raw);

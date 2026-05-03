@@ -1,24 +1,32 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'
+    show Widget, BuildContext, StatefulWidget, State, ValueNotifier, SizedBox;
 
-import '../core/chat_manager.dart';
-import '../models/message.dart';
-import '../models/visibility.dart';
-import 'visibility_scope.dart';
+import '../core/chat_manager.dart' show ChatManager, ChatManagerStatus;
+import '../models/message.dart'
+    show
+        Message,
+        AudioMessage,
+        CustomMessage,
+        ImageMessage,
+        LinkMessage,
+        TextMessage,
+        VideoMessage;
+import '../models/visibility.dart' show VisibilityInfo;
+import 'visibility_scope.dart' show ChatVisibilityScope;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-typedef ChatMessageBuilder<T extends Message> =
-    Widget Function(BuildContext context, T message);
+typedef ChatMessageBuilder<T extends Message> = Widget Function(
+    BuildContext context, T message);
 
 typedef ChatMessageVisibilityCallback = void Function(VisibilityInfo info);
 
-typedef ChatMessageVisibilityDetectorBuilder =
-    Widget Function(
-      BuildContext context,
-      String id,
-      Widget child,
-      ChatMessageVisibilityCallback callback,
-    );
+typedef ChatMessageVisibilityDetectorBuilder = Widget Function(
+  BuildContext context,
+  String id,
+  Widget child,
+  ChatMessageVisibilityCallback callback,
+);
 
 // ── Widget ────────────────────────────────────────────────────────────────────
 

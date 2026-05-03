@@ -1,4 +1,4 @@
-import '../models/status.dart';
+import '../models/status.dart' show Status;
 
 abstract class ChatStatusDelegate {
   Future<void> online(String uid, Map<String, dynamic> value);

@@ -1,4 +1,4 @@
-import '../models/message.dart';
+import '../models/message.dart' show Message;
 
 class MessageUploadData {
   final String roomId;

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 
 /// Pluggable error reporter. App provides an implementation (Crashlytics,
 /// Sentry, custom logger) and chat layer routes all caught exceptions to it

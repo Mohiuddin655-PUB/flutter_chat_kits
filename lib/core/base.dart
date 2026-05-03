@@ -1,7 +1,9 @@
-import 'dart:async';
+import 'dart:async' show Timer, StreamSubscription;
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'
+    show ChangeNotifier, protected, mustCallSuper, kDebugMode, debugPrint;
+import 'package:flutter/material.dart'
+    show WidgetsBindingObserver, AppLifecycleState, WidgetsBinding;
 
 abstract class BaseNotifier extends ChangeNotifier with WidgetsBindingObserver {
   // ── Configuration ──────────────────────────────────────────────────────────

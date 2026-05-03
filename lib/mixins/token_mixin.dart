@@ -1,10 +1,10 @@
-import 'dart:async';
+import 'dart:async' show StreamSubscription;
 
-import '../core/room_manager_base.dart';
-import '../models/profile.dart';
-import '../models/room.dart';
-import '../utils/field_value.dart';
-import '../utils/platform.dart';
+import '../core/room_manager_base.dart' show RoomManagerBase;
+import '../models/profile.dart' show UserProfileKeys;
+import '../models/room.dart' show RoomKeys;
+import '../utils/field_value.dart' show ChatValueDelete;
+import '../utils/platform.dart' show currentPlatform;
 
 mixin TokenMixin on RoomManagerBase {
   StreamSubscription<String?>? _tokenRefreshSub;

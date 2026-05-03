@@ -1,7 +1,7 @@
-import '../core/room_manager_base.dart';
-import '../models/profile.dart';
-import '../models/room.dart';
-import '../utils/field_value.dart';
+import '../core/room_manager_base.dart' show RoomManagerBase;
+import '../models/profile.dart' show UserProfileKeys;
+import '../models/room.dart' show RoomKeys;
+import '../utils/field_value.dart' show ChatValueDelete;
 
 mixin RoomUpdateMixin on RoomManagerBase {
   @override

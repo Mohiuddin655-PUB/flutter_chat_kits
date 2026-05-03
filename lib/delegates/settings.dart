@@ -1,5 +1,5 @@
-import '../models/profile.dart';
-import '../models/room.dart';
+import '../models/profile.dart' show Profile, UserProfile;
+import '../models/room.dart' show Room;
 
 typedef NotificationSender = Future<Profile?> Function();
 typedef VerifyToSendNotification = bool Function(Room, UserProfile);

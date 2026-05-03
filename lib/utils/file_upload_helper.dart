@@ -1,4 +1,4 @@
-import '../models/message.dart';
+import '../models/message.dart' show MessageType;
 
 /// Static helpers for inferring file extensions and storage-prefix labels
 /// from file paths and [MessageType] fallbacks.
@@ -62,16 +62,16 @@ abstract final class FileUploadHelper {
   // ── Private Helpers ───────────────────────────────────────────────────────
 
   static String? _fallbackExtension(MessageType type) => switch (type) {
-    MessageType.audio => 'm4a',
-    MessageType.image => 'jpg',
-    MessageType.video => 'mp4',
-    _ => null,
-  };
+        MessageType.audio => 'm4a',
+        MessageType.image => 'jpg',
+        MessageType.video => 'mp4',
+        _ => null,
+      };
 
   static String _fallbackPrefix(MessageType type) => switch (type) {
-    MessageType.audio => 'aud',
-    MessageType.image => 'img',
-    MessageType.video => 'vid',
-    _ => 'txt',
-  };
+        MessageType.audio => 'aud',
+        MessageType.image => 'img',
+        MessageType.video => 'vid',
+        _ => 'txt',
+      };
 }

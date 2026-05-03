@@ -1,4 +1,4 @@
-import '../core/room_manager.dart';
+import '../core/room_manager.dart' show RoomManager;
 
 // ── Base ──────────────────────────────────────────────────────────────────────
 

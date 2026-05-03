@@ -1,32 +1,33 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show ValueNotifier, protected;
 
-import '../delegates/ai.dart';
-import '../delegates/cache.dart';
-import '../delegates/error_reporter.dart';
-import '../delegates/message.dart';
-import '../delegates/normalizer.dart';
-import '../delegates/notification.dart';
-import '../delegates/profile.dart';
-import '../delegates/room.dart';
-import '../delegates/settings.dart';
-import '../delegates/status.dart';
-import '../delegates/typing.dart';
-import '../models/message.dart';
-import '../models/profile.dart';
-import '../models/room.dart';
-import '../models/status.dart';
-import '../models/typing.dart';
-import '../utils/field_value.dart';
-import '../utils/model_configs.dart';
-import 'base.dart';
-import 'chat_manager.dart';
+import '../delegates/ai.dart' show ChatAiDelegate;
+import '../delegates/cache.dart' show ChatCacheDelegate;
+import '../delegates/error_reporter.dart' show ChatErrorReporter;
+import '../delegates/message.dart' show ChatMessageDelegate;
+import '../delegates/normalizer.dart' show ChatFieldValueNormalizer;
+import '../delegates/notification.dart' show ChatNotificationDelegate;
+import '../delegates/profile.dart' show ChatProfileDelegate;
+import '../delegates/room.dart' show ChatRoomDelegate;
+import '../delegates/settings.dart'
+    show ChatUserSettingsDelegate, ChatNotification, ChatSilentNotification;
+import '../delegates/status.dart' show ChatStatusDelegate;
+import '../delegates/typing.dart' show ChatTypingDelegate;
+import '../models/message.dart' show Message;
+import '../models/profile.dart' show Profile, BotProfile, UserProfile;
+import '../models/room.dart' show Room, DirectRoom, GroupRoom;
+import '../models/status.dart' show Status;
+import '../models/typing.dart' show Typing;
+import '../utils/field_value.dart' show ChatValueTimestamp;
+import '../utils/model_configs.dart' show ChatModelConfigs;
+import 'base.dart' show BaseNotifier;
+import 'chat_manager.dart' show ChatManager;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared Typedefs
 // ─────────────────────────────────────────────────────────────────────────────
 
-typedef OnChatPageOpeningCallback<T extends Object?> =
-    Future<T?> Function(ChatManager manager);
+typedef OnChatPageOpeningCallback<T extends Object?> = Future<T?> Function(
+    ChatManager manager);
 
 typedef VerifyToSendMessage = bool Function(Room room);
 
@@ -196,10 +197,9 @@ abstract class RoomManagerBase extends BaseNotifier {
   // Public Accessors
   // ═══════════════════════════════════════════════════════════════════════════
 
-  List<Room> get rooms =>
-      mappedRooms.values
-          .where((r) => !r.isRemovedByMe && r.isVerified)
-          .toList();
+  List<Room> get rooms => mappedRooms.values
+      .where((r) => !r.isRemovedByMe && r.isVerified)
+      .toList();
 
   Room room(String? roomId) {
     if (roomId == null || roomId.isEmpty) return const Room.empty();
@@ -389,10 +389,9 @@ abstract class RoomManagerBase extends BaseNotifier {
     for (final entry in _roomNotifiers.entries) {
       final room = mappedRooms[entry.key];
       if (room == null) continue;
-      final isParticipant =
-          room is DirectRoom
-              ? room.friendId == uid
-              : room.participants.contains(uid);
+      final isParticipant = room is DirectRoom
+          ? room.friendId == uid
+          : room.participants.contains(uid);
       if (isParticipant) updateRoomNotifier(entry.key);
     }
   }

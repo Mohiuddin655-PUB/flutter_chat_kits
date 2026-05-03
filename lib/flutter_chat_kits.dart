@@ -2,6 +2,7 @@ export 'core/base.dart';
 export 'core/chat_manager.dart';
 export 'core/room_manager.dart';
 export 'core/room_manager_base.dart';
+export 'delegates/ai.dart';
 export 'delegates/cache.dart';
 export 'delegates/error_reporter.dart';
 export 'delegates/message.dart';

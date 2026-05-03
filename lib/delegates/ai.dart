@@ -1,5 +1,5 @@
-import '../models/message.dart';
-import '../models/profile.dart';
+import '../models/message.dart' show Message;
+import '../models/profile.dart' show BotProfile;
 
 class ChatAiRequest {
   final BotProfile profile;

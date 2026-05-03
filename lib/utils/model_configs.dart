@@ -1,8 +1,8 @@
-import '../models/message.dart';
-import '../models/profile.dart';
-import '../models/room.dart';
-import '../models/status.dart';
-import '../models/typing.dart';
+import '../models/message.dart' show MessageKeys;
+import '../models/profile.dart' show BotProfileKeys, UserProfileKeys;
+import '../models/room.dart' show RoomKeys;
+import '../models/status.dart' show StatusKeys;
+import '../models/typing.dart' show TypingKeys;
 
 class ChatModelConfigs {
   final MessageKeys messageKeys;

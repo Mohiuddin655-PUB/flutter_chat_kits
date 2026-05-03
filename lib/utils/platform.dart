@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
-import 'platform_stub.dart' if (dart.library.io) 'platform_io.dart';
+import '_platform_stub.dart' if (dart.library.io) '_platform_io.dart';
 
 String get currentPlatform => kIsWeb ? 'web' : nativePlatform;

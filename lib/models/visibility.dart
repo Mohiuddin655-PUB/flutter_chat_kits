@@ -1,6 +1,6 @@
-import 'dart:ui';
+import 'dart:ui' show Size;
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show Key;
 
 class VisibilityInfo {
   final Key? key;

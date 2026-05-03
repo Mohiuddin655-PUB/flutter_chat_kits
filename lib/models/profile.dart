@@ -1,7 +1,7 @@
-import 'package:equatable/equatable.dart';
+import 'package:equatable/equatable.dart' show Equatable;
 
-import '../core/room_manager.dart';
-import '../utils/parser.dart';
+import '../core/room_manager.dart' show RoomManager;
+import '../utils/parser.dart' show ChatListParser, MapParser;
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -130,20 +130,20 @@ class BotProfile extends Profile {
   });
 
   const BotProfile.empty()
-    : this(
-        id: '',
-        name: '',
-        photo: null,
-        age: 0,
-        gender: '',
-        country: '',
-        continent: '',
-        speakingStyle: '',
-        languages: const [],
-        interests: const [],
-        personalityTraits: const [],
-        favoriteTopics: const [],
-      );
+      : this(
+          id: '',
+          name: '',
+          photo: null,
+          age: 0,
+          gender: '',
+          country: '',
+          continent: '',
+          speakingStyle: '',
+          languages: const [],
+          interests: const [],
+          personalityTraits: const [],
+          favoriteTopics: const [],
+        );
 
   final int age;
   final String gender;
@@ -216,21 +216,22 @@ class BotProfile extends Profile {
     List<String>? personalityTraits,
     List<String>? favoriteTopics,
     ProfileExtra? extra,
-  }) => BotProfile(
-    id: id ?? this.id,
-    name: name ?? this.name,
-    photo: photo ?? this.photo,
-    age: age ?? this.age,
-    gender: gender ?? this.gender,
-    country: country ?? this.country,
-    continent: continent ?? this.continent,
-    speakingStyle: speakingStyle ?? this.speakingStyle,
-    languages: languages ?? this.languages,
-    interests: interests ?? this.interests,
-    personalityTraits: personalityTraits ?? this.personalityTraits,
-    favoriteTopics: favoriteTopics ?? this.favoriteTopics,
-    extra: extra ?? this.extra,
-  );
+  }) =>
+      BotProfile(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        photo: photo ?? this.photo,
+        age: age ?? this.age,
+        gender: gender ?? this.gender,
+        country: country ?? this.country,
+        continent: continent ?? this.continent,
+        speakingStyle: speakingStyle ?? this.speakingStyle,
+        languages: languages ?? this.languages,
+        interests: interests ?? this.interests,
+        personalityTraits: personalityTraits ?? this.personalityTraits,
+        favoriteTopics: favoriteTopics ?? this.favoriteTopics,
+        extra: extra ?? this.extra,
+      );
 
   // ── Source ───────────────────────────────────────────────────────────────────
 
@@ -257,20 +258,20 @@ class BotProfile extends Profile {
 
   @override
   List<Object?> get props => [
-    id,
-    name,
-    photo,
-    age,
-    gender,
-    country,
-    continent,
-    speakingStyle,
-    languages,
-    interests,
-    personalityTraits,
-    favoriteTopics,
-    extra,
-  ];
+        id,
+        name,
+        photo,
+        age,
+        gender,
+        country,
+        continent,
+        speakingStyle,
+        languages,
+        interests,
+        personalityTraits,
+        favoriteTopics,
+        extra,
+      ];
 }
 
 // ── UserProfile ────────────────────────────────────────────────────────────────
@@ -334,17 +335,18 @@ class UserProfile extends Profile {
     bool? newMessageAlerts,
     bool? newRoomAlerts,
     ProfileExtra? extra,
-  }) => UserProfile(
-    id: id ?? this.id,
-    name: name ?? this.name,
-    photo: photo ?? this.photo,
-    platform: platform ?? this.platform,
-    token: token ?? this.token,
-    room: clearRoom ? null : (room ?? this.room),
-    newMessageAlerts: newMessageAlerts ?? this.newMessageAlerts,
-    newRoomAlerts: newRoomAlerts ?? this.newRoomAlerts,
-    extra: extra ?? this.extra,
-  );
+  }) =>
+      UserProfile(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        photo: photo ?? this.photo,
+        platform: platform ?? this.platform,
+        token: token ?? this.token,
+        room: clearRoom ? null : (room ?? this.room),
+        newMessageAlerts: newMessageAlerts ?? this.newMessageAlerts,
+        newRoomAlerts: newRoomAlerts ?? this.newRoomAlerts,
+        extra: extra ?? this.extra,
+      );
 
   // ── Source ───────────────────────────────────────────────────────────────────
 
@@ -367,14 +369,14 @@ class UserProfile extends Profile {
 
   @override
   List<Object?> get props => [
-    id,
-    name,
-    photo,
-    platform,
-    room,
-    token,
-    newRoomAlerts,
-    newMessageAlerts,
-    extra,
-  ];
+        id,
+        name,
+        photo,
+        platform,
+        room,
+        token,
+        newRoomAlerts,
+        newMessageAlerts,
+        extra,
+      ];
 }

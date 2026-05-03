@@ -1,9 +1,9 @@
-import '../core/room_manager_base.dart';
-import '../delegates/settings.dart';
-import '../models/profile.dart';
-import '../models/room.dart';
-import '../utils/chat_helper.dart';
-import '../utils/field_value.dart';
+import '../core/room_manager_base.dart' show RoomManagerBase;
+import '../delegates/settings.dart' show ChatSilentNotification;
+import '../models/profile.dart' show Profile;
+import '../models/room.dart' show Room, RoomExtra, RoomKeys;
+import '../utils/chat_helper.dart' show ChatHelper;
+import '../utils/field_value.dart' show ChatValueTimestamp;
 
 mixin RoomCrudMixin on RoomManagerBase {
   Future<Room> generateOrGetThread(

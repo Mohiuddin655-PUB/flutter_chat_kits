@@ -1,9 +1,18 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'
+    show
+        StatefulWidget,
+        PreferredSizeWidget,
+        ValueChanged,
+        BuildContext,
+        Widget,
+        State,
+        Size,
+        kToolbarHeight;
 
-import '../core/chat_manager.dart';
-import '../models/profile.dart';
-import '../models/status.dart';
-import '../models/typing.dart';
+import '../core/chat_manager.dart' show ChatManager;
+import '../models/profile.dart' show Profile;
+import '../models/status.dart' show Status;
+import '../models/typing.dart' show Typing;
 
 // ── Data ──────────────────────────────────────────────────────────────────────
 
@@ -54,11 +63,11 @@ class _ChatAppbarState extends State<ChatAppbar> {
   ChatManager get _manager => widget.manager;
 
   ChatAppbarData get _data => ChatAppbarData(
-    isDeleted: _manager.isDeleted,
-    profile: _manager.profile,
-    status: _manager.status,
-    typings: List.unmodifiable(_manager.typings),
-  );
+        isDeleted: _manager.isDeleted,
+        profile: _manager.profile,
+        status: _manager.status,
+        typings: List.unmodifiable(_manager.typings),
+      );
 
   // ── Lifecycle ──────────────────────────────────────────────────────────────
 

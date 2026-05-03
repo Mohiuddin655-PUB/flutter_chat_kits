@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/foundation.dart' show ValueNotifier, ValueListenable;
+import 'package:flutter/widgets.dart' show BuildContext, InheritedNotifier;
 
 class ChatVisibilityScope extends InheritedNotifier<ValueNotifier<bool>> {
   const ChatVisibilityScope({

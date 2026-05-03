@@ -1,4 +1,4 @@
-import '../models/profile.dart';
+import '../models/profile.dart' show Profile;
 
 class ChatNotificationContent {
   final String id;

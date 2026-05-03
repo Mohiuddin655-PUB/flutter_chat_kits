@@ -1,6 +1,6 @@
-import '../core/room_manager_base.dart';
-import '../models/room.dart';
-import '../utils/field_value.dart';
+import '../core/room_manager_base.dart' show RoomManagerBase;
+import '../models/room.dart' show Room, RoomKeys;
+import '../utils/field_value.dart' show ChatValueRemove, ChatValueAdd;
 
 mixin ParticipantMixin on RoomManagerBase {
   Future<void> addParticipants(Room room, Iterable<String> participants) async {

@@ -1,15 +1,40 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'
+    show
+        Widget,
+        BuildContext,
+        StatefulWidget,
+        State,
+        StatelessWidget,
+        EdgeInsets,
+        SizedBox,
+        TextStyle,
+        Color,
+        IconData,
+        ValueListenableBuilder,
+        ValueKey,
+        MainAxisAlignment,
+        Colors,
+        AlwaysStoppedAnimation,
+        CircularProgressIndicator,
+        Icon,
+        FontWeight,
+        TextOverflow,
+        Text,
+        Flexible,
+        Row,
+        Container,
+        AnimatedSwitcher,
+        Icons;
 
-import '../core/room_manager.dart';
+import '../core/room_manager.dart' show RoomManager;
 
 /// Builder for the connection banner. Receives the current state and
 /// queued message count so apps can render their own design.
-typedef ChatConnectionBannerBuilder =
-    Widget Function(
-      BuildContext context,
-      ChatConnectionState state,
-      int pendingCount,
-    );
+typedef ChatConnectionBannerBuilder = Widget Function(
+  BuildContext context,
+  ChatConnectionState state,
+  int pendingCount,
+);
 
 /// Connection state for banner rendering.
 enum ChatConnectionState {
@@ -127,47 +152,46 @@ class _DefaultConnectionBanner extends StatelessWidget {
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 250),
-      child:
-          shouldShow
-              ? Container(
-                key: ValueKey(state),
-                width: double.infinity,
-                color: _backgroundColor,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (state == ChatConnectionState.reconnecting)
-                      const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(Colors.white),
-                        ),
-                      )
-                    else
-                      Icon(_icon, color: Colors.white, size: 16),
-                    const SizedBox(width: 8),
-                    Flexible(
-                      child: Text(
-                        _label,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+      child: shouldShow
+          ? Container(
+              key: ValueKey(state),
+              width: double.infinity,
+              color: _backgroundColor,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (state == ChatConnectionState.reconnecting)
+                    const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(Colors.white),
                       ),
+                    )
+                  else
+                    Icon(_icon, color: Colors.white, size: 16),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      _label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ],
-                ),
-              )
-              : const SizedBox.shrink(),
+                  ),
+                ],
+              ),
+            )
+          : const SizedBox.shrink(key: ValueKey('hidden')),
     );
   }
 

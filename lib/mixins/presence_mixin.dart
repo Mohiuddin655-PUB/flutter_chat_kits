@@ -1,7 +1,7 @@
-import '../core/room_manager_base.dart';
-import '../models/profile.dart';
-import '../models/status.dart';
-import '../utils/field_value.dart';
+import '../core/room_manager_base.dart' show RoomManagerBase;
+import '../models/profile.dart' show UserProfileKeys;
+import '../models/status.dart' show StatusKeys;
+import '../utils/field_value.dart' show ChatValueDelete, ChatValueTimestamp;
 
 mixin PresenceMixin on RoomManagerBase {
   Future<void> markAsActive(String? roomId) async {

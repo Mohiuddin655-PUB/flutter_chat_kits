@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.23] - 2026-05-03
+
+- Improved and optimized version
+
 ## [1.0.22] - 2026-05-03
 
 - Improved and readable version

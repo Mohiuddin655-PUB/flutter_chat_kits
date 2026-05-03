@@ -1,4 +1,4 @@
-import '../models/typing.dart';
+import '../models/typing.dart' show Typing;
 
 abstract class ChatTypingDelegate {
   Future<void> start(String roomId, String uid);

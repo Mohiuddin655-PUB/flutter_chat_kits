@@ -1,7 +1,7 @@
-import 'package:equatable/equatable.dart';
+import 'package:equatable/equatable.dart' show Equatable;
 
-import '../core/room_manager.dart';
-import '../utils/field_value.dart';
+import '../core/room_manager.dart' show RoomManager;
+import '../utils/field_value.dart' show ChatValueTimestamp;
 
 // ── Keys ──────────────────────────────────────────────────────────────────────
 

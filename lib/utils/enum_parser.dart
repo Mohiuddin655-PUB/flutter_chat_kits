@@ -18,13 +18,12 @@ extension ChatEnumParser<T extends Enum> on Iterable<T> {
   Map<String, T>? tryReferences(Object? raw) {
     if (raw is! Map || raw.isEmpty) return null;
 
-    final entries =
-        raw.entries.map((e) {
-          final k = e.key.toString();
-          final v = tryParse(e.value);
-          if (k.isEmpty || v == null) return null;
-          return MapEntry(k, v);
-        }).whereType<MapEntry<String, T>>();
+    final entries = raw.entries.map((e) {
+      final k = e.key.toString();
+      final v = tryParse(e.value);
+      if (k.isEmpty || v == null) return null;
+      return MapEntry(k, v);
+    }).whereType<MapEntry<String, T>>();
 
     final map = Map.fromEntries(entries);
     return map.isEmpty ? null : map;

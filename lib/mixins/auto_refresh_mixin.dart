@@ -1,6 +1,6 @@
-import 'dart:async';
+import 'dart:async' show Timer;
 
-import '../core/room_manager_base.dart';
+import '../core/room_manager_base.dart' show RoomManagerBase;
 
 mixin AutoRefreshMixin on RoomManagerBase {
   Timer? _autoRefreshTimer;

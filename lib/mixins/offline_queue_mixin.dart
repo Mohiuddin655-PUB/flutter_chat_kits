@@ -1,10 +1,9 @@
-import 'dart:async';
+import 'package:flutter/foundation.dart' show ValueNotifier, ValueListenable;
 
-import 'package:flutter/foundation.dart';
-
-import '../core/room_manager_base.dart';
-import '../delegates/settings.dart';
-import '../models/message.dart';
+import '../core/room_manager_base.dart'
+    show RoomManagerBase, VerifyToSendMessage, OnDeniedToSendMessage;
+import '../delegates/settings.dart' show ChatSilentNotification;
+import '../models/message.dart' show Message, MessageStatus;
 
 /// Queues messages locally when offline and replays them when connectivity
 /// is restored. Each entry preserves the original message + notification

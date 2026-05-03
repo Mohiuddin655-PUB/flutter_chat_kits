@@ -1,41 +1,45 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'
+    show
+        Widget,
+        BuildContext,
+        StatefulWidget,
+        State,
+        SizedBox,
+        ValueListenableBuilder;
 
-import '../core/room_manager.dart';
-import '../models/profile.dart';
-import '../models/room.dart';
-import '../models/status.dart';
-import '../models/typing.dart';
-import '../models/visibility.dart';
+import '../core/room_manager.dart' show RoomManager;
+import '../models/profile.dart' show Profile;
+import '../models/room.dart' show DirectRoom, GroupRoom, Room;
+import '../models/status.dart' show Status;
+import '../models/typing.dart' show Typing;
+import '../models/visibility.dart' show VisibilityInfo;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 typedef ChatInboxVisibilityCallback = void Function(VisibilityInfo info);
 
-typedef ChatInboxDirectBuilder =
-    Widget Function(
-      BuildContext context,
-      DirectRoom room,
-      Profile profile,
-      Status status,
-      Typing? typing,
-    );
+typedef ChatInboxDirectBuilder = Widget Function(
+  BuildContext context,
+  DirectRoom room,
+  Profile profile,
+  Status status,
+  Typing? typing,
+);
 
-typedef ChatInboxGroupBuilder =
-    Widget Function(
-      BuildContext context,
-      GroupRoom room,
-      Profile profile,
-      Status status,
-      List<Typing> typings,
-    );
+typedef ChatInboxGroupBuilder = Widget Function(
+  BuildContext context,
+  GroupRoom room,
+  Profile profile,
+  Status status,
+  List<Typing> typings,
+);
 
-typedef ChatInboxVisibilityBuilder =
-    Widget Function(
-      BuildContext context,
-      String id,
-      Widget child,
-      ChatInboxVisibilityCallback callback,
-    );
+typedef ChatInboxVisibilityBuilder = Widget Function(
+  BuildContext context,
+  String id,
+  Widget child,
+  ChatInboxVisibilityCallback callback,
+);
 
 // ── Widget ────────────────────────────────────────────────────────────────────
 
@@ -129,19 +133,19 @@ class _ChatInboxState extends State<ChatInbox> {
 
     return switch (room) {
       DirectRoom() => widget.directBuilder(
-        context,
-        room,
-        profile,
-        status,
-        typings.firstOrNull,
-      ),
+          context,
+          room,
+          profile,
+          status,
+          typings.firstOrNull,
+        ),
       GroupRoom() => widget.groupBuilder(
-        context,
-        room,
-        profile,
-        status,
-        typings,
-      ),
+          context,
+          room,
+          profile,
+          status,
+          typings,
+        ),
       _ => const SizedBox.shrink(),
     };
   }

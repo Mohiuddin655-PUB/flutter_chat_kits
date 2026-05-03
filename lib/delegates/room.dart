@@ -1,4 +1,4 @@
-import '../models/room.dart';
+import '../models/room.dart' show Room;
 
 abstract class ChatRoomDelegate {
   Future<void> create(String roomId, Map<String, dynamic> value);

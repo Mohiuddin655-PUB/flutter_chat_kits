@@ -44,15 +44,15 @@ extension ChatManagerMessaging on ChatManager {
 
     final updatedMsg = switch (msg) {
       TextMessage() => msg.copyWith(
-        isEdited: true,
-        editedAt: editedAt,
-        text: content,
-      ),
+          isEdited: true,
+          editedAt: editedAt,
+          text: content,
+        ),
       LinkMessage() => msg.copyWith(
-        isEdited: true,
-        editedAt: editedAt,
-        link: content,
-      ),
+          isEdited: true,
+          editedAt: editedAt,
+          link: content,
+        ),
       _ => null,
     };
 
